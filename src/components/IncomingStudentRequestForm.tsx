@@ -242,9 +242,9 @@ const generateRequestHTML = (
 
 
 <!-- إطار رئيسي واسع كما في النسخة الأولى -->
-<div style="margin: 30px 0 32px 0; width: 100%; max-width: 900px; background: #f8f9fa; padding: 18px 28px 10px 28px; border-radius: 16px; border: 2px solid #1e40af; text-align: right;">
+
   <div style="font-size: 18px; font-weight: 900; color: #000000; font-family: 'Cairo', Tahoma, Arial, sans-serif; margin-bottom: 12px;">
-    الموضوع: طلب ملف مدرسي ${isMultiple ? 'لمجموعة من التلاميذ' : 'لتلميذ(ة)'}
+    الموضوع: طلب ملف مدرسي ${isMultiple ? 'لمجموعة من التلاميذ' : 'للتلميذ(ة)'}
   </div>
   <div style="display: flex; justify-content: flex-start; align-items: center; gap: 44px; margin-top: 8px;">
     <span style="font-weight: bold; font-size: 15px; color: #1e40af; font-family: 'Cairo', Tahoma, Arial, sans-serif;">
