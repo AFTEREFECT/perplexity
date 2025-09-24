@@ -237,7 +237,7 @@ const generateRequestHTML = (
 </div>
 <!-- اسم المصلحة تحت العارضة (وسط)- -->
 <div style="text-align: center; font-weight: 700; font-size: 15px;">
-      ${institutionSettings.directorate} - 
+     - ${institutionSettings.directorate} 
 </div>
 
 
