@@ -97,7 +97,20 @@ const IncomingStudentRequestForm: React.FC<IncomingStudentRequestFormProps> = ({
     try {
       console.log('🔄 تحميل إعدادات المؤسسة للتقرير...');
       
-      // محاولة جلب الإعدادات من localStorage أولاً
+      // محاولة جلب الإعدادات من قاعدة البيانات أولاً
+      const settings = await dbManager.getInstitutionSettings();
+      if (settings) {
+        console.log('✅ تم جلب إعدادات المؤسسة من قاعدة البيانات:', settings);
+        setInstitutionSettings({
+          academy: settings.academy || 'الأكاديمية الجهوية للتربية والتكوين',
+          directorate: settings.directorate || 'المديرية الإقليمية',
+          municipality: settings.municipality || 'الجماعة',
+          institution: settings.institution || 'المؤسسة التعليمية'
+        });
+        return;
+      }
+      
+      // إذا لم توجد في قاعدة البيانات، جرب localStorage
       const saved = localStorage.getItem('institutionSettings');
       if (saved) {
         const localSettings = JSON.parse(saved);
@@ -111,19 +124,7 @@ const IncomingStudentRequestForm: React.FC<IncomingStudentRequestFormProps> = ({
         return;
       }
       
-      // إذا لم توجد في localStorage، جرب قاعدة البيانات
-      const settings = await dbManager.getInstitutionSettings();
-      if (settings) {
-        console.log('✅ تم جلب إعدادات المؤسسة من قاعدة البيانات:', settings);
-        setInstitutionSettings({
-          academy: settings.academy || 'الأكاديمية الجهوية للتربية والتكوين',
-          directorate: settings.directorate || 'المديرية الإقليمية',
-          municipality: settings.municipality || 'الجماعة',
-          institution: settings.institution || 'المؤسسة التعليمية'
-        });
-      } else {
-        console.log('⚠️ لا توجد إعدادات محفوظة، سيتم استخدام القيم الافتراضية');
-      }
+      console.log('⚠️ لا توجد إعدادات محفوظة، سيتم استخدام القيم الافتراضية');
     } catch (error) {
       console.error('❌ خطأ في تحميل إعدادات المؤسسة:', error);
     }
