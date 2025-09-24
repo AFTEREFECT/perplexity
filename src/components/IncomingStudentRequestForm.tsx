@@ -238,10 +238,10 @@ console.log('settings', institutionSettings)
         ${logoHTML}
         <div style="margin-top: 3mm;">
           <div style="font-size: 16px; font-weight: bold; margin: 2mm 0;">
-            ${institutionSettings.academy}
+            ${institutionSettings.academy} الأكاديمية الجهوية للتربية و التكوين لجهة : 
           </div>
           <div style="font-size: 16px; font-weight: bold; margin: 2mm 0;">
-            ${institutionSettings.directorate}
+            ${institutionSettings.directorate}المديرية الاقليمية :
           </div>
           <div style="font-size: 18px; color: #1e40af; margin: 2mm 0;">
             ${institutionSettings.institution}
