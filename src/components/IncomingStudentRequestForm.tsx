@@ -251,19 +251,21 @@ const generateRequestHTML = (
       رقم الطلب: ${requestNumber}
     </span>
     ${requestData.includeSendingNumber && requestData.sendingNumber ? `
+       <div style="display: flex; justify-content: flex-start; align-items: center; gap: 44px; margin-top: 8px;">
       <span style="font-weight: bold; font-size: 15px; color: #1e40af; font-family: 'Cairo', Tahoma, Arial, sans-serif;">
         رقم الإرسال: ${requestData.sendingNumber}
       </span>
     ` : ''}
     ${requestData.includeReference && requestData.reference ? `
+      <div style="display: flex; justify-content: flex-start; align-items: center; gap: 44px; margin-top: 8px;">
       <span style="font-weight: bold; font-size: 15px; color: #1e40af; font-family: 'Cairo', Tahoma, Arial, sans-serif;">
         المرجع: ${requestData.reference}
       </span>
     ` : ''}
   </div>
 </div>
-
-
+</div>
+</div>
         
         <!-- المحتوى -->
         <div style="margin-bottom: 15mm; text-align: center; line-height: 1.8;">
