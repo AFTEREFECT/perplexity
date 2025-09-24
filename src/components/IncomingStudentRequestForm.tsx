@@ -656,7 +656,7 @@ ${includeReminderInReport && reminderAlert ? `
 </div>
 
 
-                </div>
+          
               </div>
 
               {/* اسم المؤسسة */}
