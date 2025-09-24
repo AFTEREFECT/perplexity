@@ -219,7 +219,7 @@ const generateRequestHTML = (
   إلى السيد(ة) مدير(ة)
 </div>
 <!-- اسم المؤسسة بخط أزرق أكبر تحتها -->
-<div style="text-align: center; font-size: 18px; margin-top: 2px;">
+<div style="text-align: center; font-size: 18px; margin-top: 2px;  font-weight: 700; font-size: 15px;">
   ${requestData.institutionName || student.originalInstitution}
 </div>
 <!-- عارضة أفقية قصيرة تحت المؤسسة (وسط) -->
