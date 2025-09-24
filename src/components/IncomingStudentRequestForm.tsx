@@ -185,7 +185,7 @@ const generateRequestHTML = (
   isMultiple: boolean = false
 ) => {
   const logoHTML = logoManager.getLogoHTML();
-
+console.log('settings', institutionSettings)
   return `
     <div style="font-family: 'Cairo', Arial, sans-serif; direction: rtl; padding: 10mm; line-height: 1.7; background: white; color: #000;">
       <!-- رأس الوثيقة -->
