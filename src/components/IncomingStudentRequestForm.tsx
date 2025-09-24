@@ -317,7 +317,7 @@ console.log('settings', institutionSettings)
       <span style="color: #1e40af;">رقم الإرسال: ${requestData.sendingNumber}</span>
     ` : ''}
     ${requestData.includeReference && requestData.reference ? `
-      <span style="color: #1e40af;">المرجع: ${requestData.reference}</span>
+   
     ` : ''}
   </div>
 </div>
