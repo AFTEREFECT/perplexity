@@ -306,7 +306,6 @@ console.log('settings', institutionSettings)
  
 </div>
 
-
 <!-- إطار الموضوع والمرجعيات (يبقى بالإطار الأزرق وعناصر bold كما في الصورة) -->
 <div style="margin: 24px 0 18px 0; width: 100%; max-width: 950px; padding: 11px 28px 7px 28px;  text-align: right; font-weight: bold;">
   <div style="font-size: 18px; color: #222; margin-bottom: 11px; text-align: right;">
@@ -405,7 +404,6 @@ ${includeReminderInReport && reminderAlert ? `
   <span style="font-size: 14px; text-align: left; flex: 1; font-weight: bold;">توقيع السيد(ة) المدير(ة)</span>
 </div>
 
- 
     `;
   };
 
