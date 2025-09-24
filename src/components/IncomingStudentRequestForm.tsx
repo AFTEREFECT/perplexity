@@ -266,9 +266,9 @@ const generateRequestHTML = (
 
         
         <!-- المحتوى -->
-        <div style="margin-bottom: 15mm; text-align: justify; line-height: 1.8;">
+        <div style="margin-bottom: 15mm; text-align: center; line-height: 1.8;">
           <p style="margin-bottom: 8mm; text-align: center;">سلام تام بوجود مولانا الإمام أيده الله،</p>
-          <p style="margin-bottom: 8mm;  text-align: justify;">
+          <p style="margin-bottom: 8mm;  text-align: center;">
             وبعد، نرجو منكم التكرم بإرسال ${isMultiple ? 'الملفات المدرسية للتلاميذ' : 'الملف المدرسي للتلميذ(ة)'} 
             المذكور${isMultiple ? 'ين' : ''} أدناه، وذلك لاستكمال إجراءات تسجيل${isMultiple ? 'هم' : 'ه'} 
             بمؤسستنا للموسم الدراسي الحالي.
