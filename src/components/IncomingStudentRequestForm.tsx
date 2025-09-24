@@ -317,7 +317,7 @@ console.log('settings', institutionSettings)
       <span style="color: #1e40af;">رقم الإرسال: ${requestData.sendingNumber}</span>
     ` : ''}
     ${requestData.includeReference && requestData.reference ? `
-   
+      <span style="color: #1e40af;">المرجع: ${requestData.reference}</span>
     ` : ''}
   </div>
 </div>
@@ -379,8 +379,8 @@ ${includeReminderInReport && reminderAlert ? `
           <th style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-weight: bold;">المرجع</th>
           <th style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-weight: bold;">نوع الطلب</th>
         </tr>
-      </thead>
-    </thead>
+
+</thead>
   <tbody>
     ${reminderAlert.previousRequests.map((req, index) => `
       <tr style="${index % 2 === 0 ? 'background: white;' : 'background: #f9fafb;'}">
@@ -403,7 +403,14 @@ ${includeReminderInReport && reminderAlert ? `
   <span style="font-size: 14px; text-align: right; flex: 1; font-weight: bold;">توقيع السيد الحارس العام</span>
   <span style="font-size: 14px; text-align: left; flex: 1; font-weight: bold;">توقيع السيد(ة) المدير(ة)</span>
 </div>
+
+
+
  
+ 
+    `;
+  };
+
   // توليد PDF للطلب
   const generateRequestPDF = async () => {
     if (students.length === 0) {
