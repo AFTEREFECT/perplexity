@@ -282,12 +282,12 @@ console.log('settings', institutionSettings)
 <!-- إطار الموضوع والمرجعيات (يبقى بالإطار الأزرق وعناصر bold كما في الصورة) -->
 <div style="margin: 24px 0 18px 0; width: 100%; max-width: 950px; padding: 11px 28px 7px 28px;  text-align: right; font-weight: bold;">
   <div style="font-size: 18px; color: #222; margin-bottom: 11px; text-align: right;">
-    الموضوع: طلب ملف مدرسي ${isMultiple ? 'لمجموعة من التلاميذ' : 'للتلميذ(ة)'}
+    الموضوع: طلب ملف مدرسي ${isMultiple ? 'لمجموعة من التلاميذ' : 'للتلميذ(ة)'}     رقم  : ${requestNumber}
   </div>
   <div style="display: flex; justify-content: flex-start; align-items: center; gap: 44px;">
     <span style="color: #1e40af;">
           <span style="color:#1e40af;">رقم الإرسال: ${requestData.sendingNumber}</span>
-      رقم الطلب: ${requestNumber}
+  
     </span>
     ${requestData.includeSendingNumber && requestData.sendingNumber ? `
 
