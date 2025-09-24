@@ -251,17 +251,19 @@ console.log('settings', institutionSettings)
 <!-- رأس المراسلة -->
 <div style="margin: 24px 0 12px 0; display: flex; flex-direction: column; align-items: center;">
   <div style="font-weight: bold; font-size: 15px; text-align: center; width:100%;">
-    إلى السيد(ة) مدير(ة) ${requestData.serviceType}
+    إلى السيد(ة) مدير(ة):    ${requestData.institutionName || student.originalInstitution}       
   </div>
-  <div style="font-weight: bold; font-size: 15px; text-align: center; width:100%;">
-    ${requestData.institutionName || student.originalInstitution}
-  </div>
+
   <div style="font-weight: bold; font-size: 15px; text-align: center; width:100%;">
     - تحت إشراف السيد/ة المدير/ة الإقليمي -
   </div>
   <div style="font-weight: bold; font-size: 15px; text-align: center; width:100%;">
-    - ${institutionSettings.directorate} -
+    -المديرية الاقليمية : ${institutionSettings.directorate} -
   </div>
+    <div style="font-weight: bold; font-size: 15px; text-align: center; width:100%;">
+    ${requestData.serviceType}
+  </div>
+ 
 </div>
 
 <!-- سطر: تاريخ الطلب يمين - من مدير المؤسسة يسار -->
