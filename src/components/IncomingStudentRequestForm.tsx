@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Send, FileText, Building, Calendar, Users, Download, Printer, AlertCircle, CheckCircle, Plus } from 'lucide-react';
+import { X, Send, FileText, Building, Calendar, Users, Download, Printer, AlertCircle, CheckCircle, Plus, Trash2 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { logoManager } from '../utils/logoManager';
@@ -540,7 +540,7 @@ ${includeReminderInReport && reminderAlert ? `
           {/* معلومات التلاميذ */}
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
             <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
-            disabled={!formData.studentId || !requestData.sendingNumber.trim()}
+              <Users className="w-5 h-5" />
               التلاميذ المحددين ({students.length})
             </h3>
             <div className="max-h-32 overflow-y-auto space-y-2">
@@ -763,7 +763,7 @@ ${includeReminderInReport && reminderAlert ? `
                     onChange={(e) => setRequestData(prev => ({ ...prev, includeLastCorrespondenceDate: e.target.checked }))}
                     className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                   />
-                
+                  <span className="mr-2 text-sm font-medium text-gray-700">تضمين تاريخ آخر مراسلة</span>
                 </label>
                 
                 <label className="flex items-center">
@@ -827,7 +827,7 @@ ${includeReminderInReport && reminderAlert ? `
           <div className="flex gap-4 pt-4">
             <button
               onClick={generateRequestPDF}
-              disabled={generating || students.length === 0}
+              disabled={generating || students.length === 0 || !requestData.sendingNumber.trim()}
               className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center gap-2"
             >
               {generating ? (
@@ -1061,10 +1061,6 @@ ${includeReminderInReport && reminderAlert ? `
                     سيتم حذف هذه المصلحة نهائياً من القائمة
                   </p>
                 </div>
-      </div>
-    </div>
-  );
-};
 
                 <div className="flex gap-4">
                   <button
@@ -1087,4 +1083,9 @@ ${includeReminderInReport && reminderAlert ? `
             </div>
           </div>
         )}
+      </div>
+    </div>
+  );
+};
+
 export default IncomingStudentRequestForm;
