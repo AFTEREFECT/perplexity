@@ -216,21 +216,29 @@ const generateRequestHTML = (
   </div>
 <!-- السطر الثاني: إلى السيد(ة) مدير(ة) في المنتصف -->
 <div style="text-align: center; font-weight: 700; font-size: 15px;">
-:  ${requestData.institutionName || student.originalInstitution}إلى السيد(ة) مدير(ة)
+  إلى السيد(ة) مدير(ة)
 </div>
 <!-- اسم المؤسسة بخط أزرق أكبر تحتها -->
 <div style="text-align: center; font-size: 18px; margin-top: 2px;  font-weight: 700; font-size: 15px;">
-
+  ${requestData.institutionName || student.originalInstitution}
 </div>
+
 <!-- عارضة أفقية قصيرة تحت المؤسسة (وسط) -->
 <div style="display: flex; justify-content: center; margin: 5px 0 2px 0;">
   <div style="width: 120px; height: 2px; background: #1e40af; border-radius: 2px;"></div>
 </div>
-<!-- اسم المصلحة تحت العارضة (وسط) -->
-<div style="text-align: center; font-weight: 700; font-size: 15px;">
-  ${requestData.serviceType}
-</div>
 
+<div style="text-align: center; font-weight: 700; font-size: 15px;">
+ تحت اشراف السيد/ة المدير/ة - الاقليمي،
+</div>
+<!-- اسم المصلحة تحت العارضة (وسط)- -->
+<div style="text-align: center; font-weight: 700; font-size: 15px;">
+  ${requestData.serviceType} - 
+</div>
+<!-- اسم المصلحة تحت العارضة (وسط)- -->
+<div style="text-align: center; font-weight: 700; font-size: 15px;">
+      ${institutionSettings.directorate} - 
+</div>
 
 
 <!-- إطار رئيسي واسع كما في النسخة الأولى -->
