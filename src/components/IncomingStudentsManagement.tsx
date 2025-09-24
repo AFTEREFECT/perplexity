@@ -419,7 +419,7 @@ const IncomingStudentsManagement: React.FC = () => {
         {/* محتوى الأقسام */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100">
           {/* نظرة عامة */}
-          {activeTab === 'overview' && (
+          {activeTab === 'management' && (
             <div className="p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-6">نظرة عامة على التلاميذ الوافدين</h2>
               
