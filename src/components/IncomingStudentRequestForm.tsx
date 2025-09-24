@@ -222,28 +222,26 @@ const generateRequestHTML = (
     </div>
   </div>
 </div>
-<!-- العنوان الرئيسي للموضوع داخل إطار صغير ويمين الصفحة -->
-<div style="width: 410px; margin: 18px 0 6px auto; text-align: right; background: #f8f9fa; padding: 8px 22px; border-radius: 9mm; border: 1.5px solid #1e40af;">
-  <h2 style="font-size: 17px; font-weight: 900; color: #1e40af; margin: 0; font-family: 'Cairo', Tahoma, Arial, sans-serif;">
+<!-- إطار موحّد للموضوع ثم المرجعيات تحته في نفس الحاوية -->
+<div style="width: 510px; margin: 18px 0 6px auto; background: #f8f9fa; padding: 12px 28px 10px 28px; border-radius: 11mm; border: 2px solid #1e40af; text-align: right;">
+  <div style="font-size: 18px; font-weight: 900; color: #1e40af; font-family: 'Cairo', Tahoma, Arial, sans-serif; margin-bottom: 8px;">
     الموضوع: طلب ملف مدرسي ${isMultiple ? 'لمجموعة من التلاميذ' : 'لتلميذ(ة)'}
-  </h2>
-</div>
-
-<!-- المرجعيات الثلاث مباشرة تحت الإطار الأول -->
-<div style="width: 410px; margin: 2px 0 0 auto; display: flex; justify-content: flex-start; align-items: center; gap: 32px; background: #f8f9fa; border: 1.5px solid #1e40af; border-radius: 7mm; padding: 7px 20px;">
-  <span style="font-weight: bold; font-size: 15px; color: #1e40af; font-family: 'Cairo', Tahoma, Arial, sans-serif;">
-    رقم الطلب: ${requestNumber}
-  </span>
-  ${requestData.includeSendingNumber && requestData.sendingNumber ? `
+  </div>
+  <div style="display: flex; justify-content: flex-start; align-items: center; gap: 32px; margin-top: 7px;">
     <span style="font-weight: bold; font-size: 15px; color: #1e40af; font-family: 'Cairo', Tahoma, Arial, sans-serif;">
-      رقم الإرسال: ${requestData.sendingNumber}
+      رقم الطلب: ${requestNumber}
     </span>
-  ` : ''}
-  ${requestData.includeReference && requestData.reference ? `
-    <span style="font-weight: bold; font-size: 15px; color: #1e40af; font-family: 'Cairo', Tahoma, Arial, sans-serif;">
-      المرجع: ${requestData.reference}
-    </span>
-  ` : ''}
+    ${requestData.includeSendingNumber && requestData.sendingNumber ? `
+      <span style="font-weight: bold; font-size: 15px; color: #1e40af; font-family: 'Cairo', Tahoma, Arial, sans-serif;">
+        رقم الإرسال: ${requestData.sendingNumber}
+      </span>
+    ` : ''}
+    ${requestData.includeReference && requestData.reference ? `
+      <span style="font-weight: bold; font-size: 15px; color: #1e40af; font-family: 'Cairo', Tahoma, Arial, sans-serif;">
+        المرجع: ${requestData.reference}
+      </span>
+    ` : ''}
+  </div>
 </div>
 
 
