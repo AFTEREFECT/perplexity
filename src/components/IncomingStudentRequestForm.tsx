@@ -232,9 +232,9 @@ const generateRequestHTML = (
   const logoHTML = logoManager.getLogoHTML();
 console.log('settings', institutionSettings)
   return `
-    <div style="font-family: 'Cairo', Arial, sans-serif; direction: rtl; padding: 10mm; line-height: 1.7; background: white; color: #000;">
+    <div style="font-family: 'Cairo', Arial, sans-serif; direction: rtl; padding: 4mm; line-height: 1.7; background: white; color: #000;">
       <!-- رأس الوثيقة -->
-      <div style="text-align: center; margin-bottom: 8mm; border-bottom: 1.5px solid #1e40af; padding-bottom: 2mm;">
+      <div style="text-align: center; margin-bottom: 4mm; border-bottom: 1.5px solid #1e40af; padding-bottom: 2mm;">
         ${logoHTML}
         <div style="margin-top: 3mm;">
           <div style="font-size: 16px; font-weight: bold; margin: 2mm 0;">
@@ -248,6 +248,17 @@ console.log('settings', institutionSettings)
           </div>
         </div>
       </div>
+<!-- سطر: تاريخ الطلب يمين - من مدير المؤسسة يسار -->
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+  <div style="font-weight: bold; font-size: 15px;">
+    من مدير المؤسسة
+  </div>
+  <div style="font-weight: bold; font-size: 15px;">
+    ${requestData.requestDate ? `تاريخ: ${new Date(requestData.requestDate).toLocaleDateString('fr-MA')}` : ''}
+  </div>
+</div>
+
+      
 <!-- رأس المراسلة -->
 <div style="margin: 24px 0 12px 0; display: flex; flex-direction: column; align-items: center;">
   <div style="font-weight: bold; font-size: 15px; text-align: center; width:100%;">
@@ -267,15 +278,6 @@ console.log('settings', institutionSettings)
  
 </div>
 
-<!-- سطر: تاريخ الطلب يمين - من مدير المؤسسة يسار -->
-<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-  <div style="font-weight: bold; font-size: 15px;">
-    من مدير المؤسسة
-  </div>
-  <div style="font-weight: bold; font-size: 15px;">
-    ${requestData.requestDate ? `تاريخ: ${new Date(requestData.requestDate).toLocaleDateString('fr-MA')}` : ''}
-  </div>
-</div>
 
 <!-- إطار الموضوع والمرجعيات (يبقى بالإطار الأزرق وعناصر bold كما في الصورة) -->
 <div style="margin: 24px 0 18px 0; width: 100%; max-width: 950px; background: #f8f9fa; padding: 11px 28px 7px 28px; border-radius: 16px; border: 2px solid #1e40af; text-align: right; font-weight: bold;">
