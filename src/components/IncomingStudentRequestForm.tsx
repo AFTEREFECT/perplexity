@@ -611,7 +611,7 @@ ${includeReminderInReport && reminderAlert ? `
                     <option value="">اختر المصلحة</option>
                     {services.map(service => (
                       <option key={service.id} value={service.name} data-service-id={service.id}>
-                        {service.name} {!ServiceManager.canDeleteService(service.id) ? }
+                        {service.name} {!ServiceManager.canDeleteService(service.id) }
                       </option>
                     ))}
                   </select>
