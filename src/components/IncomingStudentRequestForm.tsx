@@ -229,11 +229,11 @@ const generateRequestHTML = (
 </div>
 
 <div style="text-align: center; font-weight: 700; font-size: 15px;">
- تحت اشراف السيد/ة المدير/ة - الاقليمي،
+- تحت اشراف السيد/ة المدير/ة  الاقليمي،-
 </div>
 <!-- اسم المصلحة تحت العارضة (وسط)- -->
 <div style="text-align: center; font-weight: 700; font-size: 15px;">
-  ${requestData.serviceType} - 
+ -  ${requestData.serviceType} 
 </div>
 <!-- اسم المصلحة تحت العارضة (وسط)- -->
 <div style="text-align: center; font-weight: 700; font-size: 15px;">
