@@ -214,15 +214,21 @@ const generateRequestHTML = (
       ${requestData.requestDate ? `تاريخ: ${new Date(requestData.requestDate).toLocaleDateString('fr-MA')}` : ''}
     </div>
   </div>
-  
-  <!-- السطر الثاني: إلى السيد(ة)... في المنتصف -->
-  <div style="text-align: center; font-weight: 700; font-size: 15px; margin-bottom: 2px;">
-    إلى السيد(ة) رئيس(ة) ${requestData.serviceType}
-  </div>
-  <!-- اسم المؤسسة بخط أزرق أكبر تحتها -->
-  <div style="text-align: center; font-weight: bold; font-size: 18px; color: #1e40af;">
-    ${requestData.institutionName || student.originalInstitution}
-  </div>
+<!-- السطر الثاني: إلى السيد(ة) مدير(ة) في المنتصف -->
+<div style="text-align: center; font-weight: 700; font-size: 15px;">
+  إلى السيد(ة) مدير(ة)
+</div>
+<!-- اسم المؤسسة بخط أزرق أكبر تحتها -->
+<div style="text-align: center; font-weight: bold; font-size: 18px; color: #1e40af; margin-top: 2px;">
+  ${requestData.institutionName || student.originalInstitution}
+</div>
+<!-- عارضة أفقية قصيرة تحت المؤسسة (وسط) -->
+<div style="display: flex; justify-content: center; margin: 5px 0 2px 0;">
+  <div style="width: 120px; height: 2px; background: #1e40af; border-radius: 2px;"></div>
+</div>
+<!-- اسم المصلحة تحت العارضة (وسط) -->
+<div style="text-align: center; font-weight: 700; font-size: 15px;">
+  ${requestData.serviceType}
 </div>
 
 
