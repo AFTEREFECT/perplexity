@@ -280,7 +280,7 @@ console.log('settings', institutionSettings)
 
 
 <!-- إطار الموضوع والمرجعيات (يبقى بالإطار الأزرق وعناصر bold كما في الصورة) -->
-<div style="margin: 24px 0 18px 0; width: 100%; max-width: 950px; background: #f8f9fa; padding: 11px 28px 7px 28px; border-radius: 16px; border: 2px solid #1e40af; text-align: right; font-weight: bold;">
+<div style="margin: 24px 0 18px 0; width: 100%; max-width: 950px; padding: 11px 28px 7px 28px;  text-align: right; font-weight: bold;">
   <div style="font-size: 18px; color: #222; margin-bottom: 11px; text-align: right;">
     الموضوع: طلب ملف مدرسي ${isMultiple ? 'لمجموعة من التلاميذ' : 'للتلميذ(ة)'}
   </div>
