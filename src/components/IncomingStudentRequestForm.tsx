@@ -376,40 +376,38 @@ ${includeReminderInReport && reminderAlert ? `
         <tr style="background: #f3f4f6;">
           <th style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-weight: bold;">تاريخ الإرسال</th>
           <th style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-weight: bold;">رقم الإرسال</th>
-          <th style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-weight: bold;">المرجع</th>
+          <th style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-weight: bold;">المرجع</th> 
           <th style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-weight: bold;">نوع الطلب</th>
         </tr>
-
-</thead>
-  <tbody>
-    ${reminderAlert.previousRequests.map((req, index) => `
-      <tr style="${index % 2 === 0 ? 'background: white;' : 'background: #f9fafb;'}">
-        <td style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-weight: bold;">${new Date(req.requestDate).toLocaleDateString('fr-MA')}</td>
-        <td style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-family: monospace; font-weight: bold;">${req.sendingNumber || 'غير محدد'}</td>
-        <td style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-family: monospace; font-weight: bold;">${req.reference || 'غير محدد'}</td>
-        <td style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-weight: bold;">${req.requestType}</td>
-      </tr> 
-    `).join('')}
-  </tbody>
-</table>
-<div style="margin-bottom:3mm; text-align: center; line-height: 1.8;">
-  <p style="margin-bottom: 2mm; font-weight: bold;">
-    نشكركم مسبقاً على تعاونكم وسرعة استجابتكم، ونؤكد لكم استعدادنا للتعاون المتبادل.
-  </p>
-  <p style="font-weight: bold;">وتقبلوا فائق الاحترام والتقدير.</p>
-</div>
+      </thead>
+      <tbody>
+        ${reminderAlert.previousRequests.map((req, index) => `
+          <tr style="${index % 2 === 0 ? 'background: white;' : 'background: #f9fafb;'}">
+            <td style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-weight: bold;">${new Date(req.requestDate).toLocaleDateString('fr-MA')}</td>
+            <td style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-family: monospace; font-weight: bold;">${req.sendingNumber || 'غير محدد'}</td>
+            <td style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-family: monospace; font-weight: bold;">${req.reference || 'غير محدد'}</td>
+            <td style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-weight: bold;">${req.requestType}</td>
+          </tr> 
+        `).join('')}
+      </tbody>
+    </table>
+    <div style="margin-bottom:3mm; text-align: center; line-height: 1.8;">
+      <p style="margin-bottom: 2mm; font-weight: bold;">
+        نشكركم مسبقاً على تعاونكم وسرعة استجابتكم، ونؤكد لكم استعدادنا للتعاون المتبادل.
+      </p>
+      <p style="font-weight: bold;">وتقبلوا فائق الاحترام والتقدير.</p>
+    </div>
+  </div>
+` : ''}
 <!-- صناديق التوقيعات -->
 <div style="padding: 5mm; display: flex; justify-content: space-between; text-align: center;">
   <span style="font-size: 14px; text-align: right; flex: 1; font-weight: bold;">توقيع السيد الحارس العام</span>
   <span style="font-size: 14px; text-align: left; flex: 1; font-weight: bold;">توقيع السيد(ة) المدير(ة)</span>
 </div>
 
-
-
  
- 
-    `
-  
+    `;
+  };
 
   // توليد PDF للطلب
   const generateRequestPDF = async () => {
