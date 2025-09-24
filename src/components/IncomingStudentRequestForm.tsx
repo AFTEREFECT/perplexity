@@ -239,7 +239,8 @@ const generateRequestHTML = (
 <div style="text-align: center; font-weight: 700; font-size: 15px;">
      - ${institutionSettings.directorate} 
 </div>
-
+<div>
+</div>
 
 <!-- إطار رئيسي واسع كما في النسخة الأولى -->
 
