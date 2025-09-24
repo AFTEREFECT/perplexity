@@ -203,161 +203,138 @@ const generateRequestHTML = (
           </div>
         </div>
       </div>
-
 <div style="margin: 24px 0 18px 0;">
   <!-- السطر الأعلى: التاريخ يمين، من مدير المؤسسة يسار -->
   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
-    <div style="font-weight: 700; font-size: 15px;">
+    <div style="font-weight: bold; font-size: 15px;">
       من مدير المؤسسة
     </div>
-    <div style="font-weight: 700; font-size: 15px;">
+    <div style="font-weight: bold; font-size: 15px;">
       ${requestData.requestDate ? `تاريخ: ${new Date(requestData.requestDate).toLocaleDateString('fr-MA')}` : ''}
     </div>
   </div>
-<!-- السطر الثاني: إلى السيد(ة) مدير(ة) في المنتصف -->
-<div style="text-align: center; font-weight: 700; font-size: 15px;">
-  إلى السيد(ة) مدير(ة)
-</div>
-<!-- اسم المؤسسة بخط أزرق أكبر تحتها -->
-<div style="text-align: center; font-size: 18px; margin-top: 2px;  font-weight: 700; font-size: 15px;">
-  ${requestData.institutionName || student.originalInstitution}
-</div>
-
-<!-- عارضة أفقية قصيرة تحت المؤسسة (وسط) -->
-<div style="display: flex; justify-content: center; margin: 5px 0 2px 0;">
-  <div style="width: 120px; height: 2px; background: #1e40af; border-radius: 2px;"></div>
-</div> 
-
-<div style="text-align: center; font-weight: 700; font-size: 15px;">
-- تحت اشراف السيد/ة المدير/ة  الاقليمي،-
-</div>
-<!-- اسم المصلحة تحت العارضة (وسط)- -->
-<div style="text-align: center; font-weight: 700; font-size: 15px;">
- -  ${requestData.serviceType} 
-</div>
-<!-- اسم المصلحة تحت العارضة (وسط)- -->
-<div style="text-align: center; font-weight: 700; font-size: 15px;">
-     - ${institutionSettings.directorate} 
-</div>
-
-
-<!-- إطار رئيسي واسع كما في النسخة الأولى -->
-<div style="margin: 30px 0 32px 0; width: 100%; max-width: 900px; background: #f8f9fa; padding: 18px 28px 10px 28px; border-radius: 16px; border: 2px solid #1e40af; text-align: right;">
-  <div style="font-size: 18px; font-weight: 900; color: #000000; font-family: 'Cairo', Tahoma, Arial, sans-serif; margin-bottom: 12px;">
-    الموضوع: طلب ملف مدرسي ${isMultiple ? 'لمجموعة من التلاميذ' : 'للتلميذ(ة)'}
+  <!-- السطر الثاني: إلى السيد(ة) مدير(ة) في المنتصف -->
+  <div style="text-align: center; font-weight: bold; font-size: 15px;">
+    إلى السيد(ة) مدير(ة)
   </div>
-  <div style="display: flex; justify-content: flex-start; align-items: center; gap: 44px; margin-top: 8px;">
-    <span style="font-weight: bold; font-size: 15px; color: #1e40af; font-family: 'Cairo', Tahoma, Arial, sans-serif;">
-      رقم الطلب: ${requestNumber}
-    </span>
-    ${requestData.includeSendingNumber && requestData.sendingNumber ? `
-      <span style="font-weight: bold; font-size: 15px; color: #1e40af; font-family: 'Cairo', Tahoma, Arial, sans-serif;">
-        رقم الإرسال: ${requestData.sendingNumber}
-      </span>
-    ` : ''}
-    ${requestData.includeReference && requestData.reference ? `
-      <span style="font-weight: bold; font-size: 15px; color: #1e40af; font-family: 'Cairo', Tahoma, Arial, sans-serif;">
-        المرجع: ${requestData.reference}
-      </span>
-    ` : ''}
+  <!-- اسم المؤسسة بخط أزرق أكبر تحتها -->
+  <div style="text-align: center; font-size: 18px; margin-top: 2px; font-weight: bold; color: #1e40af;">
+    ${requestData.institutionName || student.originalInstitution}
+  </div>
+  <!-- عارضة أفقية قصيرة تحت المؤسسة (وسط) -->
+  <div style="display: flex; justify-content: center; margin: 5px 0 2px 0;">
+    <div style="width: 120px; height: 2px; background: #1e40af; border-radius: 2px;"></div>
+  </div> 
+  <div style="text-align: center; font-weight: bold; font-size: 15px;">
+    - تحت اشراف السيد/ة المدير/ة  الاقليمي،-
+  </div>
+  <!-- اسم المصلحة تحت العارضة (وسط) -->
+  <div style="text-align: center; font-weight: bold; font-size: 15px;">
+    -  ${requestData.serviceType} 
+  </div>
+  <!-- المديرية الإقليمية أسفلها (وسط) -->
+  <div style="text-align: center; font-weight: bold; font-size: 15px;">
+    - ${institutionSettings.directorate} 
   </div>
 </div>
 
+<!-- العنوان والمرجعيات بدون إطار وكلها bold -->
+<div style="text-align:center; font-weight:bold; font-size:19px; margin:16px 0 7px 0;">
+  الموضوع: طلب ملف مدرسي ${isMultiple ? 'لمجموعة من التلاميذ' : 'للتلميذ(ة)'}
+</div>
+<div style="display: flex; justify-content: center; align-items: center; gap: 44px; margin: 2px 0 12px 0; font-weight:bold; font-size:15px;">
+  <span style="color:#1e40af;">رقم الطلب: ${requestNumber}</span>
+  ${requestData.includeSendingNumber && requestData.sendingNumber ? `
+    <span style="color:#1e40af;">رقم الإرسال: ${requestData.sendingNumber}</span>
+  ` : ''}
+  ${requestData.includeReference && requestData.reference ? `
+    <span style="color:#1e40af;">المرجع: ${requestData.reference}</span>
+  ` : ''}
+</div>
 
-        
-        <!-- المحتوى -->
-        <div style="margin-bottom: 15mm; text-align: center; line-height: 1.8;">
-          <p style="margin-bottom: 8mm; text-align: center;">سلام تام بوجود مولانا الإمام أيده الله،</p>
-          <p style="margin-bottom: 8mm;  text-align: center;">
-            وبعد، نرجو منكم التكرم بإرسال ${isMultiple ? 'الملفات المدرسية للتلاميذ' : 'الملف المدرسي للتلميذ(ة)'} 
-            المذكور${isMultiple ? 'ين' : ''} أدناه، وذلك لاستكمال إجراءات تسجيل${isMultiple ? 'هم' : 'ه'} 
-            بمؤسستنا للموسم الدراسي الحالي.
-          </p>
-        </div>
- 
-        <!-- بيانات التلميذ/التلاميذ في جدول -->
-        <div style="margin-bottom: 6mm;">
-          <h3 style="font-size: 14px; font-weight: bold; color: #374151; margin-bottom: 8mm; text-align: center;">
-            بيانات التلميذ${isMultiple ? ' المطلوب ملفاتهم' : '(ة)'}
-          </h3>
-          
-          <table style="width: 100%; border-collapse: collapse; font-size: 12px; border: 2px solid #374151;">
-            <thead>
-              <tr style="background: #e5e7eb;">
-                <th style="border: 1px solid #374151; padding: 4mm; text-align: center; font-weight: bold;">الرقم الوطني</th>
-                <th style="border: 1px solid #374151; padding: 4mm; text-align: center; font-weight: bold;">رقم التلميذ</th>
-                <th style="border: 1px solid #374151; padding: 4mm; text-align: center; font-weight: bold;">الاسم الكامل</th>
-                <th style="border: 1px solid #374151; padding: 4mm; text-align: center; font-weight: bold;">النوع</th>
-                <th style="border: 1px solid #374151; padding: 4mm; text-align: center; font-weight: bold;">المستوى</th>
-                <th style="border: 1px solid #374151; padding: 4mm; text-align: center; font-weight: bold;">تاريخ التحويل</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${students.map((s, index) => `
-                <tr style="${index % 2 === 0 ? 'background: white;' : 'background: #f9fafb;'}">
-                  <td style="border: 1px solid #374151; padding: 3mm; text-align: center; font-family: monospace; font-weight: bold;">${s.linkedNationalId || s.studentId}</td>
-                  <td style="border: 1px solid #374151; padding: 3mm; text-align: center; font-family: monospace; font-weight: bold;">${s.studentId}</td>
-                  <td style="border: 1px solid #374151; padding: 3mm; text-align: center; font-weight: bold;">${s.firstName} ${s.lastName}</td>
-                  <td style="border: 1px solid #374151; padding: 3mm; text-align: center;">${s.linkedGender || 'غير محدد'}</td>
-                  <td style="border: 1px solid #374151; padding: 3mm; text-align: center;">${s.level}</td>
-                  <td style="border: 1px solid #374151; padding: 3mm; text-align: center;">${s.transferDate ? new Date(s.transferDate).toLocaleDateString('fr-MA') : 'غير محدد'}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-        
-     
-        <!-- سجل المراسلات السابقة (إذا كان مطلوباً) -->
-        ${includeReminderInReport && reminderAlert ? `
-          <div style="margin-bottom: 5mm;">
-            <h4 style="font-size: 12px; font-weight: bold; color: #374151; margin-bottom: 5mm; text-align: center;">
-              سجل المراسلات السابقة
-            </h4>
-            <p style="font-size: 12px; color: #000000; text-align: center; margin-bottom: 5mm;">
-              ${reminderAlert.message}
-            </p>
-            
-            <table style="width: 100%; border-collapse: collapse; font-size: 10px; border: 1px solid #d1d5db;">
-              <thead>
-                <tr style="background: #f3f4f6;">
-                  <th style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-weight: bold;">تاريخ الإرسال</th>
-                  <th style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-weight: bold;">رقم الإرسال</th>
-                  <th style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-weight: bold;">المرجع</th>
-                  <th style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-weight: bold;">نوع الطلب</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${reminderAlert.previousRequests.map((req, index) => `
-                  <tr style="${index % 2 === 0 ? 'background: white;' : 'background: #f9fafb;'}">
-                    <td style="border: 1px solid #d1d5db; padding: 2mm; text-align: center;">${new Date(req.requestDate).toLocaleDateString('fr-MA')}</td>
-                    <td style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-family: monospace;">${req.sendingNumber || 'غير محدد'}</td>
-                    <td style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-family: monospace;">${req.reference || 'غير محدد'}</td>
-                    <td style="border: 1px solid #d1d5db; padding: 2mm; text-align: center;">${req.requestType}</td>
-                  </tr> 
-                `).join('')}
-              </tbody>
-            </table>
-            
-         <!--    <p style="font-size: 14px; color: #000000; text-align: center; margin-top: 3mm;">
-              إجمالي المراسلات السابقة لهذا التلميذ: ${reminderAlert.requestCount} مراسلة
-            </p> -->
-   <!-- الخاتمة -->
-        <div style="margin-bottom:5mm; text-align: center; line-height: 1.8;">
-          <p style="margin-bottom: 5mm;">
-            نشكركم مسبقاً على تعاونكم وسرعة استجابتكم، ونؤكد لكم استعدادنا للتعاون المتبادل.
-          </p>
-          <p>وتقبلوا فائق الاحترام والتقدير.</p>
-        </div>
-        
-            
-          </div>
-        ` : ''}
-    
-   <!-- صناديق التوقيعات -->
+<!-- المحتوى -->
+<div style="margin-bottom: 15mm; text-align: center; line-height: 1.8;">
+  <p style="margin-bottom: 8mm; text-align: center; font-weight: bold;">سلام تام بوجود مولانا الإمام أيده الله،</p>
+  <p style="margin-bottom: 8mm;  text-align: center; font-weight: bold;">
+    وبعد، نرجو منكم التكرم بإرسال ${isMultiple ? 'الملفات المدرسية للتلاميذ' : 'الملف المدرسي للتلميذ(ة)'} 
+    المذكور${isMultiple ? 'ين' : ''} أدناه، وذلك لاستكمال إجراءات تسجيل${isMultiple ? 'هم' : 'ه'} 
+    بمؤسستنا للموسم الدراسي الحالي.
+  </p>
+</div>
+
+<!-- بيانات التلميذ/التلاميذ في جدول -->
+<div style="margin-bottom: 6mm;">
+  <h3 style="font-size: 14px; font-weight: bold; color: #374151; margin-bottom: 8mm; text-align: center;">
+    بيانات التلميذ${isMultiple ? ' المطلوب ملفاتهم' : '(ة)'}
+  </h3>
+  <table style="width: 100%; border-collapse: collapse; font-size: 12px; border: 2px solid #374151;">
+    <thead>
+      <tr style="background: #e5e7eb;">
+        <th style="border: 1px solid #374151; padding: 4mm; text-align: center; font-weight: bold;">الرقم الوطني</th>
+        <th style="border: 1px solid #374151; padding: 4mm; text-align: center; font-weight: bold;">رقم التلميذ</th>
+        <th style="border: 1px solid #374151; padding: 4mm; text-align: center; font-weight: bold;">الاسم الكامل</th>
+        <th style="border: 1px solid #374151; padding: 4mm; text-align: center; font-weight: bold;">النوع</th>
+        <th style="border: 1px solid #374151; padding: 4mm; text-align: center; font-weight: bold;">المستوى</th>
+        <th style="border: 1px solid #374151; padding: 4mm; text-align: center; font-weight: bold;">تاريخ التحويل</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${students.map((s, index) => `
+        <tr style="${index % 2 === 0 ? 'background: white;' : 'background: #f9fafb;'}">
+          <td style="border: 1px solid #374151; padding: 3mm; text-align: center; font-family: monospace; font-weight: bold;">${s.linkedNationalId || s.studentId}</td>
+          <td style="border: 1px solid #374151; padding: 3mm; text-align: center; font-family: monospace; font-weight: bold;">${s.studentId}</td>
+          <td style="border: 1px solid #374151; padding: 3mm; text-align: center; font-weight: bold;">${s.firstName} ${s.lastName}</td>
+          <td style="border: 1px solid #374151; padding: 3mm; text-align: center; font-weight: bold;">${s.linkedGender || 'غير محدد'}</td>
+          <td style="border: 1px solid #374151; padding: 3mm; text-align: center; font-weight: bold;">${s.level}</td>
+          <td style="border: 1px solid #374151; padding: 3mm; text-align: center; font-weight: bold;">${s.transferDate ? new Date(s.transferDate).toLocaleDateString('fr-MA') : 'غير محدد'}</td>
+        </tr>
+      `).join('')}
+    </tbody>
+  </table>
+</div>
+
+<!-- سجل المراسلات السابقة (إذا كان مطلوباً) -->
+${includeReminderInReport && reminderAlert ? `
+  <div style="margin-bottom: 5mm;">
+    <h4 style="font-size: 12px; font-weight: bold; color: #374151; margin-bottom: 5mm; text-align: center;">
+      سجل المراسلات السابقة
+    </h4>
+    <p style="font-size: 12px; color: #000000; text-align: center; margin-bottom: 5mm; font-weight: bold;">
+      ${reminderAlert.message}
+    </p>
+    <table style="width: 100%; border-collapse: collapse; font-size: 10px; border: 1px solid #d1d5db;">
+      <thead>
+        <tr style="background: #f3f4f6;">
+          <th style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-weight: bold;">تاريخ الإرسال</th>
+          <th style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-weight: bold;">رقم الإرسال</th>
+          <th style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-weight: bold;">المرجع</th>
+          <th style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-weight: bold;">نوع الطلب</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${reminderAlert.previousRequests.map((req, index) => `
+          <tr style="${index % 2 === 0 ? 'background: white;' : 'background: #f9fafb;'}">
+            <td style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-weight: bold;">${new Date(req.requestDate).toLocaleDateString('fr-MA')}</td>
+            <td style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-family: monospace; font-weight: bold;">${req.sendingNumber || 'غير محدد'}</td>
+            <td style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-family: monospace; font-weight: bold;">${req.reference || 'غير محدد'}</td>
+            <td style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-weight: bold;">${req.requestType}</td>
+          </tr> 
+        `).join('')}
+      </tbody>
+    </table>
+    <div style="margin-bottom:5mm; text-align: center; line-height: 1.8;">
+      <p style="margin-bottom: 5mm; font-weight: bold;">
+        نشكركم مسبقاً على تعاونكم وسرعة استجابتكم، ونؤكد لكم استعدادنا للتعاون المتبادل.
+      </p>
+      <p style="font-weight: bold;">وتقبلوا فائق الاحترام والتقدير.</p>
+    </div>
+  </div>
+` : ''}
+
+<!-- صناديق التوقيعات -->
 <div style="padding: 5mm; display: flex; justify-content: space-between; text-align: center;">
-  <span style="font-size: 14px; text-align: right; flex: 1;">توقيع السيد الحارس العام</span>
-  <span style="font-weight: bold; font-size: 14px; text-align: left; flex: 1;">توقيع السيد(ة) المدير(ة)</span>
+  <span style="font-size: 14px; text-align: right; flex: 1; font-weight: bold;">توقيع السيد الحارس العام</span>
+  <span style="font-size: 14px; text-align: left; flex: 1; font-weight: bold;">توقيع السيد(ة) المدير(ة)</span>
 </div>
 
  
