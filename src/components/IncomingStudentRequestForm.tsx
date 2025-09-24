@@ -176,90 +176,92 @@ const IncomingStudentRequestForm: React.FC<IncomingStudentRequestFormProps> = ({
     
     return `REF-${year}${month}-${String(Math.floor(Math.random() * 999) + 1).padStart(3, '0')}`;
   };
- 
-  // ... باقي الكود كما هو
-// استبدل دالة generateRequestHTML بهذه النسخة المصححة:
 
-const generateRequestHTML = (
-  student: IncomingStudent,
-  requestNumber: string,
-  isMultiple: boolean = false
-) => {
-  const logoHTML = logoManager.getLogoHTML();
-
-  return `
-    <div style="font-family: 'Cairo', Arial, sans-serif; direction: rtl; padding: 10mm; line-height: 1.7; background: white; color: #000;">
-      <!-- رأس الوثيقة -->
-      <div style="text-align: center; margin-bottom: 8mm; border-bottom: 1.5px solid #1e40af; padding-bottom: 2mm;">
-        ${logoHTML}
-        <div style="margin-top: 3mm;">
-          <div style="font-size: 16px; font-weight: bold; margin: 2mm 0;">
-            ${institutionSettings.academy}
-          </div>
-          <div style="font-size: 16px; font-weight: bold; margin: 2mm 0;">
-            ${institutionSettings.directorate}
-          </div>
-          <div style="font-size: 18px; color: #1e40af; margin: 2mm 0;">
-            ${institutionSettings.institution}
+  // توليد محتوى HTML للطلب
+  const generateRequestHTML = (student: IncomingStudent, requestNumber: string, isMultiple: boolean = false) => {
+    const logoHTML = logoManager.getLogoHTML();
+    
+    return `
+      <div style="font-family: 'Cairo', Arial, sans-serif; direction: rtl; padding: 10mm; line-height: 1.6; background: white; color: #000;">
+        <!-- رأس الوثيقة -->
+        <div style="text-align: center; margin-bottom: 10mm; border-bottom: 2px solid #1e40af; padding-bottom: 6mm;">
+          ${logoHTML}
+          <div style="margin-top: 3mm;">
+            <h1 style="font-size: 14px; font-weight: bold; color: #000000; margin: 3mm 0;">
+              ${institutionSettings.academy}
+            </h1>
+            <h2 style="font-size: 14px; font-weight: bold; color: #000000; margin: 3mm 0;">
+              ${institutionSettings.directorate}
+            </h2>
+            <h3 style="font-size: 18px; color: #000000; margin: 2mm 0;">
+              ${institutionSettings.institution}
+            </h3>
           </div>
         </div>
-      </div>
 
-      <!-- صف بيانات الطلب الأساسي (متوازي) -->
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin: 24px 0 18px 0; gap: 24px;">
-        <div style="text-align: left; flex: 1; min-width: 180px;">
-          <div style="font-weight: 700; font-size: 15px; margin-bottom: 9px;">
-            ${requestData.requestDate ? `تاريخ: ${new Date(requestData.requestDate).toLocaleDateString('fr-MA')}` : ''}
+        <!-- معلومات الطلب -->
+        <div style="margin-bottom: 15mm;">
+          <!-- بيانات المرسل والمرسل إليه حسب الصورة -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20mm; margin-bottom: 10mm;">
+            <!-- الجانب الأيسر - التاريخ ومن مدير المؤسسة --> 
+            <div style="text-align: left;">
+              <p style="margin-bottom: 5mm; font-size: 14px; font-weight: bold;">
+                تاريخ: ${new Date(requestData.requestDate).toLocaleDateString('fr-MA')}
+              </p>
+              <p style="font-size: 14px; font-weight: bold;">
+                من مدير المؤسسة
+              </p>
+            </div>
+            
+            <!-- الجانب الأيمن - إلى السيد(ة) -->
+            <div style="text-align: right;">
+              <p style="margin-bottom: 5mm; font-size: 14px; font-weight: bold;">
+                إلى السيد(ة) رئيس(ة) ${requestData.serviceType}
+              </p>
+              <p style="font-weight: bold; color: #1e40af; font-size: 16px;">
+                ${requestData.institutionName || student.originalInstitution}
+              </p>
+            </div>
           </div>
-          <div style="font-weight: 700; font-size: 15px;">
-            من مدير المؤسسة
+          
+          <!-- معلومات الطلب والمراجع -->
+          <div style="text-align: center; margin-bottom: 10mm;">
+            <div style="display: inline-block; position: relative;">
+              <!-- رقم الطلب -->
+              <span style="font-weight: bold; font-size: 14px; margin-left: 20mm;">
+                رقم الطلب: ${requestNumber}
+              </span>
+              
+              <!-- رقم الإرسال -->
+              ${requestData.includeSendingNumber && requestData.sendingNumber ? `
+                <span style="font-weight: bold; font-size: 14px; margin-left: 20mm;">
+                  رقم الإرسال: ${requestData.sendingNumber}
+                </span>
+              ` : ''}
+              
+              <!-- المرجع -->
+              ${requestData.includeReference && requestData.reference ? `
+                <span style="font-weight: bold; font-size: 14px;">
+                  المرجع: ${requestData.reference}
+                </span>
+              ` : ''}
+            </div>
+            
+            ${requestData.includeLastCorrespondenceDate && requestData.lastCorrespondenceDate ? `
+              <p style="margin-top: 5mm; font-size: 12px; color: #6b7280;">
+                <strong>تاريخ آخر مراسلة:</strong> ${new Date(requestData.lastCorrespondenceDate).toLocaleDateString('fr-MA')}
+              </p>
+            ` : ''}
           </div>
         </div>
-        <div style="text-align: right; flex: 2; min-width: 240px;">
-          <div style="font-weight: 700; font-size: 15px; margin-bottom: 8px;">
-            إلى السيد(ة) رئيس(ة) ${requestData.serviceType}
-          </div>
-          <div style="font-weight: bold; color: #1e40af; font-size: 17px;">
-            ${requestData.institutionName || student.originalInstitution}
-          </div>
+
+        <!-- موضوع الطلب -->
+        <div style="margin-bottom: 15mm; text-align: center; background: #f8f9fa; padding: 8mm; border-radius: 5mm;">
+          <h2 style="font-size: 18px; font-weight: bold; color: #1e40af; margin: 0;">
+            الموضوع: طلب ملف مدرسي ${isMultiple ? 'لمجموعة من التلاميذ' : 'لتلميذ(ة)'}
+          </h2>
         </div>
-      </div>
-      
-      <!-- صف أرقام الطلب والإرسال والمرجع -->
-      <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 15px; gap: 44px;">
-        <div style="font-weight: bold; font-size: 14px;">
-          رقم الطلب: ${requestNumber}
-        </div>
-        ${requestData.includeSendingNumber && requestData.sendingNumber ? `
-          <div style="font-weight: bold; font-size: 14px;">
-            رقم الإرسال: ${requestData.sendingNumber}
-          </div>
-        ` : ''}
-        ${requestData.includeReference && requestData.reference ? `
-          <div style="font-weight: bold; font-size: 14px;">
-            المرجع: ${requestData.reference}
-          </div>
-        ` : ''}
-      </div>
-      ${requestData.includeLastCorrespondenceDate && requestData.lastCorrespondenceDate ? `
-        <div style="text-align: left; margin-bottom: 15px;">
-          <span style="font-size: 12px; color: #6b7280;">
-            <strong>تاريخ آخر مراسلة:</strong> ${new Date(requestData.lastCorrespondenceDate).toLocaleDateString('fr-MA')}
-          </span>
-        </div>
-      ` : ''}
-
-      <!-- العنوان الرئيسي للموضوع -->
-      <div style="margin: 30px 0 32px 0; text-align: center; background: #f8f9fa; padding: 10mm 0; border-radius: 7mm; font-weight: bold; font-size: 21px; color: #1e40af; letter-spacing: 1px; border: 1px solid #1e40af;">
-        الموضوع: طلب ملف مدرسي ${isMultiple ? 'لمجموعة من التلاميذ' : 'لتلميذ(ة)'}
-      </div>
-
-      <!-- ... باقي الكود كما هو ... -->
-  `;
-};
-
-// ... وأكمل باقي الكود كما هو في ملفك الحالي، لا حاجة لتغيير الأكواد المنظمة للجداول والتذييل إذا كانت تناسبك.
-
+        
         <!-- المحتوى -->
         <div style="margin-bottom: 15mm; text-align: justify; line-height: 1.8;">
           <p style="margin-bottom: 8mm; text-align: center;">سلام تام بوجود مولانا الإمام أيده الله،</p>
