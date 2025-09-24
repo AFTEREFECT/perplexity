@@ -203,70 +203,64 @@ const generateRequestHTML = (
           </div>
         </div>
       </div>
-<div style="margin: 24px 0 18px 0;">
-  <!-- السطر الأعلى: التاريخ يمين، من مدير المؤسسة يسار -->
-  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
-    <div style="font-weight: bold; font-size: 15px;">
-      من مدير المؤسسة
-    </div>
-    <div style="font-weight: bold; font-size: 15px;">
-      ${requestData.requestDate ? `تاريخ: ${new Date(requestData.requestDate).toLocaleDateString('fr-MA')}` : ''}
-    </div>
+<!-- رأس المراسلة -->
+<div style="margin: 24px 0 12px 0; display: flex; flex-direction: column; align-items: center;">
+  <div style="font-weight: bold; font-size: 15px; text-align: center; width:100%;">
+    إلى السيد(ة) مدير(ة) ${requestData.serviceType}
   </div>
-  <!-- السطر الثاني: إلى السيد(ة) مدير(ة) في المنتصف -->
-  <div style="text-align: center; font-weight: bold; font-size: 15px;">
-    إلى السيد(ة) مدير(ة)
-  </div>
-  <!-- اسم المؤسسة بخط أزرق أكبر تحتها -->
-  <div style="text-align: center; font-size: 18px; margin-top: 2px; font-weight: bold; color: #1e40af;">
+  <div style="font-weight: bold; font-size: 15px; text-align: center; width:100%;">
     ${requestData.institutionName || student.originalInstitution}
   </div>
-  <!-- عارضة أفقية قصيرة تحت المؤسسة (وسط) -->
-  <div style="display: flex; justify-content: center; margin: 5px 0 2px 0;">
-    <div style="width: 120px; height: 2px; background: #1e40af; border-radius: 2px;"></div>
-  </div> 
-  <div style="text-align: center; font-weight: bold; font-size: 15px;">
-    - تحت اشراف السيد/ة المدير/ة  الاقليمي،-
+  <div style="font-weight: bold; font-size: 15px; text-align: center; width:100%;">
+    - تحت إشراف السيد/ة المدير/ة الإقليمي -
   </div>
-  <!-- اسم المصلحة تحت العارضة (وسط) -->
-  <div style="text-align: center; font-weight: bold; font-size: 15px;">
-    -  ${requestData.serviceType} 
-  </div>
-  <!-- المديرية الإقليمية أسفلها (وسط) -->
-  <div style="text-align: center; font-weight: bold; font-size: 15px;">
-    - ${institutionSettings.directorate} 
+  <div style="font-weight: bold; font-size: 15px; text-align: center; width:100%;">
+    - ${institutionSettings.directorate} -
   </div>
 </div>
 
-<!-- العنوان والمرجعيات بدون إطار وكلها bold -->
-<div style="text-align:center; font-weight:bold; font-size:19px; margin:16px 0 7px 0;">
-  الموضوع: طلب ملف مدرسي ${isMultiple ? 'لمجموعة من التلاميذ' : 'للتلميذ(ة)'}
-</div>
-<div style="display: flex; justify-content: center; align-items: center; gap: 44px; margin: 2px 0 12px 0; font-weight:bold; font-size:15px;">
-  <span style="color:#1e40af;">رقم الطلب: ${requestNumber}</span>
-  ${requestData.includeSendingNumber && requestData.sendingNumber ? `
-    <span style="color:#1e40af;">رقم الإرسال: ${requestData.sendingNumber}</span>
-  ` : ''}
-  ${requestData.includeReference && requestData.reference ? `
-    <span style="color:#1e40af;">المرجع: ${requestData.reference}</span>
-  ` : ''}
+<!-- سطر: تاريخ الطلب يمين - من مدير المؤسسة يسار -->
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+  <div style="font-weight: bold; font-size: 15px;">
+    من مدير المؤسسة
+  </div>
+  <div style="font-weight: bold; font-size: 15px;">
+    ${requestData.requestDate ? `تاريخ: ${new Date(requestData.requestDate).toLocaleDateString('fr-MA')}` : ''}
+  </div>
 </div>
 
-<!-- المحتوى -->
-<div style="margin-bottom: 15mm; text-align: center; line-height: 1.8;">
-  <p style="margin-bottom: 8mm; text-align: center; font-weight: bold;">سلام تام بوجود مولانا الإمام أيده الله،</p>
-  <p style="margin-bottom: 8mm;  text-align: center; font-weight: bold;">
-    وبعد، نرجو منكم التكرم بإرسال ${isMultiple ? 'الملفات المدرسية للتلاميذ' : 'الملف المدرسي للتلميذ(ة)'} 
-    المذكور${isMultiple ? 'ين' : ''} أدناه، وذلك لاستكمال إجراءات تسجيل${isMultiple ? 'هم' : 'ه'} 
-    بمؤسستنا للموسم الدراسي الحالي.
+<!-- إطار الموضوع والمرجعيات (يبقى بالإطار الأزرق وعناصر bold كما في الصورة) -->
+<div style="margin: 24px 0 18px 0; width: 100%; max-width: 950px; background: #f8f9fa; padding: 11px 28px 7px 28px; border-radius: 16px; border: 2px solid #1e40af; text-align: right; font-weight: bold;">
+  <div style="font-size: 18px; color: #222; margin-bottom: 11px; text-align: right;">
+    الموضوع: طلب ملف مدرسي ${isMultiple ? 'لمجموعة من التلاميذ' : 'للتلميذ(ة)'}
+  </div>
+  <div style="display: flex; justify-content: flex-start; align-items: center; gap: 44px;">
+    <span style="color: #1e40af;">
+      رقم الطلب: ${requestNumber}
+    </span>
+    ${requestData.includeSendingNumber && requestData.sendingNumber ? `
+      <span style="color:#1e40af;">رقم الإرسال: ${requestData.sendingNumber}</span>
+    ` : ''}
+    ${requestData.includeReference && requestData.reference ? `
+      <span style="color:#1e40af;">المرجع: ${requestData.reference}</span>
+    ` : ''}
+  </div>
+</div>
+
+<!-- النص التحية والمحتوى (الوسط مع تقليل الفراغات) -->
+<div style="margin-bottom: 12px; text-align: center; line-height: 1.8;">
+  <p style="margin-bottom: 3mm; font-weight: bold;">سلام تام بوجود مولانا الإمام أيده الله،</p>
+  <p style="margin-bottom: 2mm; font-weight: bold;">
+    وبعد، نرجو منكم التكرم بإرسال ${isMultiple ? 'الملفات المدرسية للتلاميذ' : 'الملف المدرسي للتلميذ(ة)'} المذكور${isMultiple ? 'ين' : ''} أدناه، وذلك لاستكمال إجراءات تسجيل${isMultiple ? 'هم' : 'ه'} بمؤسستنا للموسم الدراسي الحالي.
   </p>
 </div>
 
-<!-- بيانات التلميذ/التلاميذ في جدول -->
-<div style="margin-bottom: 6mm;">
-  <h3 style="font-size: 14px; font-weight: bold; color: #374151; margin-bottom: 8mm; text-align: center;">
-    بيانات التلميذ${isMultiple ? ' المطلوب ملفاتهم' : '(ة)'}
-  </h3>
+<!-- عنوان بيانات التلميذ(ة) بدون فراغ كبير -->
+<div style="margin: 5px 0; text-align: center; font-weight: bold;">
+  بيانات التلميذ${isMultiple ? ' المطلوب ملفاتهم' : '(ة)'}
+</div>
+<!-- جدول بيانات التلميذ(ة) -->
+<div style="margin-bottom: 5mm;">
   <table style="width: 100%; border-collapse: collapse; font-size: 12px; border: 2px solid #374151;">
     <thead>
       <tr style="background: #e5e7eb;">
@@ -293,13 +287,13 @@ const generateRequestHTML = (
   </table>
 </div>
 
-<!-- سجل المراسلات السابقة (إذا كان مطلوباً) -->
+<!-- سجل المراسلات السابقة (إذا كان مطلوباً) مع كل التنسيقات bold وتقليل الفراغات -->
 ${includeReminderInReport && reminderAlert ? `
   <div style="margin-bottom: 5mm;">
-    <h4 style="font-size: 12px; font-weight: bold; color: #374151; margin-bottom: 5mm; text-align: center;">
+    <h4 style="font-size: 12px; font-weight: bold; color: #374151; margin-bottom: 3mm; text-align: center;">
       سجل المراسلات السابقة
     </h4>
-    <p style="font-size: 12px; color: #000000; text-align: center; margin-bottom: 5mm; font-weight: bold;">
+    <p style="font-size: 12px; color: #000000; text-align: center; margin-bottom: 2mm; font-weight: bold;">
       ${reminderAlert.message}
     </p>
     <table style="width: 100%; border-collapse: collapse; font-size: 10px; border: 1px solid #d1d5db;">
@@ -322,15 +316,14 @@ ${includeReminderInReport && reminderAlert ? `
         `).join('')}
       </tbody>
     </table>
-    <div style="margin-bottom:5mm; text-align: center; line-height: 1.8;">
-      <p style="margin-bottom: 5mm; font-weight: bold;">
+    <div style="margin-bottom:3mm; text-align: center; line-height: 1.8;">
+      <p style="margin-bottom: 2mm; font-weight: bold;">
         نشكركم مسبقاً على تعاونكم وسرعة استجابتكم، ونؤكد لكم استعدادنا للتعاون المتبادل.
       </p>
       <p style="font-weight: bold;">وتقبلوا فائق الاحترام والتقدير.</p>
     </div>
   </div>
 ` : ''}
-
 <!-- صناديق التوقيعات -->
 <div style="padding: 5mm; display: flex; justify-content: space-between; text-align: center;">
   <span style="font-size: 14px; text-align: right; flex: 1; font-weight: bold;">توقيع السيد الحارس العام</span>
