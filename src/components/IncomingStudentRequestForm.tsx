@@ -203,61 +203,56 @@ const generateRequestHTML = (
           </div>
         </div>
       </div>
+<!-- صف بيانات الطلب الأساسي (متوازي) -->
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin: 24px 0 18px 0; gap: 24px;">
+  <div style="text-align: left; flex: 1; min-width: 180px;">
+    <div style="font-weight: 700; font-size: 15px; margin-bottom: 9px;">
+      ${requestData.requestDate ? `تاريخ: ${new Date(requestData.requestDate).toLocaleDateString('fr-MA')}` : ''}
+    </div>
+    <div style="font-weight: 700; font-size: 15px;">
+      من مدير المؤسسة
+    </div>
+  </div>
+  <div style="text-align: right; flex: 2; min-width: 240px;">
+    <div style="font-weight: 700; font-size: 15px; margin-bottom: 8px;">
+      إلى السيد(ة) رئيس(ة) ${requestData.serviceType}
+    </div>
+    <div style="font-weight: bold; color: #1e40af; font-size: 17px;">
+      ${requestData.institutionName || student.originalInstitution}
+    </div>
+  </div>
+</div>
 
-      <!-- صف بيانات الطلب الأساسي (متوازي) -->
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin: 24px 0 18px 0; gap: 24px;">
-        <div style="text-align: left; flex: 1; min-width: 180px;">
-          <div style="font-weight: 700; font-size: 15px; margin-bottom: 9px;">
-            ${requestData.requestDate ? `تاريخ: ${new Date(requestData.requestDate).toLocaleDateString('fr-MA')}` : ''}
-          </div>
-          <div style="font-weight: 700; font-size: 15px;">
-            من مدير المؤسسة
-          </div>
-        </div>
-        <div style="text-align: right; flex: 2; min-width: 240px;">
-          <div style="font-weight: 700; font-size: 15px; margin-bottom: 8px;">
-            إلى السيد(ة) رئيس(ة) ${requestData.serviceType}
-          </div>
-          <div style="font-weight: bold; color: #1e40af; font-size: 17px;">
-            ${requestData.institutionName || student.originalInstitution}
-          </div>
-        </div>
-      </div>
-      
-      <!-- صف أرقام الطلب والإرسال والمرجع -->
-      <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 15px; gap: 44px;">
-        <div style="font-weight: bold; font-size: 14px;">
-          رقم الطلب: ${requestNumber}
-        </div>
-        ${requestData.includeSendingNumber && requestData.sendingNumber ? `
-          <div style="font-weight: bold; font-size: 14px;">
-            رقم الإرسال: ${requestData.sendingNumber}
-          </div>
-        ` : ''}
-        ${requestData.includeReference && requestData.reference ? `
-          <div style="font-weight: bold; font-size: 14px;">
-            المرجع: ${requestData.reference}
-          </div>
-        ` : ''}
-      </div>
-      ${requestData.includeLastCorrespondenceDate && requestData.lastCorrespondenceDate ? `
-        <div style="text-align: left; margin-bottom: 15px;">
-          <span style="font-size: 12px; color: #6b7280;">
-            <strong>تاريخ آخر مراسلة:</strong> ${new Date(requestData.lastCorrespondenceDate).toLocaleDateString('fr-MA')}
-          </span>
-        </div>
-      ` : ''}
+<!-- صف أرقام الطلب والإرسال والمرجع مجمّع داخل إطار أنيق -->
+<div style="background: #f8f9fa; border: 1.6px solid #1e40af; border-radius: 6mm; padding: 9px 0; display: flex; justify-content: center; align-items: center; gap: 44px; margin-bottom: 22px;">
+  <div style="font-weight: bold; font-size: 15px; color: #1e40af; font-family: 'Cairo', Tahoma, Arial, sans-serif;">
+    رقم الطلب: ${requestNumber}
+  </div>
+  ${requestData.includeSendingNumber && requestData.sendingNumber ? `
+    <div style="font-weight: bold; font-size: 15px; color: #1e40af; font-family: 'Cairo', Tahoma, Arial, sans-serif;">
+      رقم الإرسال: ${requestData.sendingNumber}
+    </div>
+  ` : ''}
+  ${requestData.includeReference && requestData.reference ? `
+    <div style="font-weight: bold; font-size: 15px; color: #1e40af; font-family: 'Cairo', Tahoma, Arial, sans-serif;">
+      المرجع: ${requestData.reference}
+    </div>
+  ` : ''}
+</div>
+${requestData.includeLastCorrespondenceDate && requestData.lastCorrespondenceDate ? `
+  <div style="text-align: left; margin-bottom: 15px;">
+    <span style="font-size: 12px; color: #6b7280;">
+      <strong>تاريخ آخر مراسلة:</strong> ${new Date(requestData.lastCorrespondenceDate).toLocaleDateString('fr-MA')}
+    </span>
+  </div>
+` : ''}
 
-
-
-
-<!-- العنوان الرئيسي للموضوع -->
+<!-- العنوان الرئيسي للموضوع داخل إطار منفصل وبالخط الطبيعي -->
 <div style="margin: 30px 0 32px 0; text-align: center; background: #f8f9fa; padding: 12mm 0; border-radius: 7mm; border: 1px solid #1e40af;">
-  <h2 style="font-size: 22px; font-weight: 900; color: #1e40af; margin: 0; font-family: 'Cairo', Tahoma, Arial, sans-serif; letter-spacing: 0;">
+  <h2 style="font-size: 18px; font-weight: 900; color: #1e40af; margin: 0; font-family: 'Cairo', Tahoma, Arial, sans-serif; letter-spacing: 0;">
     الموضوع: طلب ملف مدرسي ${isMultiple ? 'لمجموعة من التلاميذ' : 'لتلميذ(ة)'}
   </h2>
 </div>
-
 
 
 
