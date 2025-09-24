@@ -616,7 +616,7 @@ ${includeReminderInReport && reminderAlert ? `
                     ))}
                   </select>
                  <button
-  type="button"
+  type="button" 
   onClick={() => setShowAddServiceModal(true)}
   className="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors duration-200"
   title="إضافة مصلحة جديدة"
