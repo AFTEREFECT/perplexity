@@ -248,10 +248,18 @@ const generateRequestHTML = (
         </div>
       ` : ''}
 
-      <!-- العنوان الرئيسي للموضوع -->
-      <div style="margin: 30px 0 32px 0; text-align: center; background: #f8f9fa; padding: 10mm 0; border-radius: 7mm; font-weight: bold; font-size: 21px; color: #1e40af; letter-spacing: 1px; border: 1px solid #1e40af;">
-        الموضوع: طلب ملف مدرسي ${isMultiple ? 'لمجموعة من التلاميذ' : 'لتلميذ(ة)'}
-      </div>
+
+
+
+<!-- العنوان الرئيسي للموضوع -->
+<div style="margin: 30px 0 32px 0; text-align: center; background: #f8f9fa; padding: 12mm 0; border-radius: 7mm; border: 1px solid #1e40af;">
+  <h2 style="font-size: 22px; font-weight: 900; color: #1e40af; margin: 0; font-family: 'Cairo', Tahoma, Arial, sans-serif; letter-spacing: 0;">
+    الموضوع: طلب ملف مدرسي ${isMultiple ? 'لمجموعة من التلاميذ' : 'لتلميذ(ة)'}
+  </h2>
+</div>
+
+
+
 
         
         <!-- المحتوى -->
