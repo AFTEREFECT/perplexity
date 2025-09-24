@@ -241,7 +241,7 @@ console.log('settings', institutionSettings)
             الأكاديمية الجهوية للتربية و التكوين لجهة :  ${institutionSettings.academy}
           </div>
           <div style="font-size: 16px; font-weight: bold; margin: 2mm 0;"> 
-           المديرية الاقليمية : ${institutionSettings.directorate}
+           المديرية الاقليمية بـ ${institutionSettings.directorate}
           </div>
           <div style="font-size: 18px; color: #1e40af; margin: 2mm 0;">
             ${institutionSettings.institution}
@@ -257,11 +257,12 @@ console.log('settings', institutionSettings)
   <div style="font-weight: bold; font-size: 15px; text-align: center; width:100%;">
     - تحت إشراف السيد/ة المدير/ة الإقليمي -
   </div>
-  <div style="font-weight: bold; font-size: 15px; text-align: center; width:100%;">
-    -المديرية الاقليمية : ${institutionSettings.directorate} -
-  </div>
+
     <div style="font-weight: bold; font-size: 15px; text-align: center; width:100%;">
     ${requestData.serviceType}
+  </div>
+    <div style="font-weight: bold; font-size: 15px; text-align: center; width:100%;">
+    -المديرية الاقليمية بـ ${institutionSettings.directorate} -
   </div>
  
 </div>
