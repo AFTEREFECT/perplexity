@@ -407,8 +407,7 @@ ${includeReminderInReport && reminderAlert ? `
 
 
  
- 
-    `;
+  
   };
 
   // توليد PDF للطلب
