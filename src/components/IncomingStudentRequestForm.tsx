@@ -5,6 +5,7 @@ import html2canvas from 'html2canvas';
 import { logoManager } from '../utils/logoManager';
 import { correspondenceReminder, ReminderAlert } from '../utils/correspondenceReminder';
 import ServiceManager from '../utils/serviceManager';
+import { dbManager } from '../utils/database';
 
 interface IncomingStudent {
   id: string;
@@ -66,6 +67,9 @@ const IncomingStudentRequestForm: React.FC<IncomingStudentRequestFormProps> = ({
     // فحص الطلبات المشابهة عند تحميل النموذج
     checkForSimilarRequests();
     
+    // تحميل إعدادات المؤسسة الفعلية
+    loadInstitutionSettings();
+    
     // تحديد نوع الطلب بناءً على عدد التلاميذ والمؤسسات
     const uniqueInstitutions = new Set(students.map(s => s.originalInstitution));
     if (uniqueInstitutions.size === 1 && students.length > 1) {
@@ -86,10 +90,62 @@ const IncomingStudentRequestForm: React.FC<IncomingStudentRequestFormProps> = ({
       }));
     }
 
-    // تحميل إعدادات المؤسسة من localStorage
-    loadInstitutionSettings();
   }, [students]);
 
+  // تحميل إعدادات المؤسسة الفعلية من قاعدة البيانات
+  const loadInstitutionSettings = async () => {
+    try {
+      console.log('🔄 تحميل إعدادات المؤسسة للتقرير...');
+      
+      // محاولة جلب الإعدادات من قاعدة البيانات أولاً
+      const settings = await dbManager.getInstitutionSettings();
+      
+      if (settings) {
+        console.log('✅ تم جلب إعدادات المؤسسة من قاعدة البيانات:', settings);
+        setInstitutionSettings({
+          academy: settings.academy || 'الأكاديمية الجهوية للتربية والتكوين',
+          directorate: settings.directorate || 'المديرية الإقليمية',
+          municipality: settings.municipality || 'الجماعة',
+          institution: settings.institution || 'المؤسسة التعليمية'
+        });
+      } else {
+        console.log('⚠️ لا توجد إعدادات في قاعدة البيانات، محاولة جلب من localStorage...');
+        
+        // إذا لم توجد في قاعدة البيانات، جرب localStorage
+        const saved = localStorage.getItem('institutionSettings');
+        if (saved) {
+          const localSettings = JSON.parse(saved);
+          console.log('✅ تم جلب إعدادات المؤسسة من localStorage:', localSettings);
+          setInstitutionSettings({
+            academy: localSettings.academy || 'الأكاديمية الجهوية للتربية والتكوين',
+            directorate: localSettings.directorate || 'المديرية الإقليمية',
+            municipality: localSettings.municipality || 'الجماعة',
+            institution: localSettings.institution || 'المؤسسة التعليمية'
+          });
+        } else {
+          console.log('⚠️ لا توجد إعدادات محفوظة، سيتم استخدام القيم الافتراضية');
+        }
+      }
+    } catch (error) {
+      console.error('❌ خطأ في تحميل إعدادات المؤسسة:', error);
+      console.log('🔄 محاولة جلب من localStorage كبديل...');
+      
+      try {
+        const saved = localStorage.getItem('institutionSettings');
+        if (saved) {
+          const localSettings = JSON.parse(saved);
+          setInstitutionSettings({
+            academy: localSettings.academy || 'الأكاديمية الجهوية للتربية والتكوين',
+            directorate: localSettings.directorate || 'المديرية الإقليمية',
+            municipality: localSettings.municipality || 'الجماعة',
+            institution: localSettings.institution || 'المؤسسة التعليمية'
+          });
+        }
+      } catch (localError) {
+        console.warn('⚠️ خطأ في جلب البيانات من localStorage أيضاً:', localError);
+      }
+    }
+  };
   // إضافة مصلحة جديدة
   const handleAddService = () => {
     try {
@@ -131,23 +187,6 @@ const IncomingStudentRequestForm: React.FC<IncomingStudentRequestFormProps> = ({
     }
   };
 
-  // تحميل إعدادات المؤسسة
-  const loadInstitutionSettings = () => {
-    try {
-      const saved = localStorage.getItem('institutionSettings');
-      if (saved) {
-        const settings = JSON.parse(saved);
-        setInstitutionSettings({
-          academy: settings.academy || 'الأكاديمية الجهوية للتربية والتكوين',
-          directorate: settings.directorate || 'المديرية الإقليمية',
-          municipality: settings.municipality || 'الجماعة',
-          institution: settings.institution || 'المؤسسة التعليمية'
-        });
-      }
-    } catch (error) {
-      console.warn('خطأ في تحميل إعدادات المؤسسة:', error);
-    }
-  };
 
   // توليد رقم الطلب
   const generateRequestNumber = (studentIndex: number = 0): string => {
