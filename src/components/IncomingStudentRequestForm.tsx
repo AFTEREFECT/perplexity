@@ -203,25 +203,30 @@ const generateRequestHTML = (
           </div>
         </div>
       </div>
-<!-- صف بيانات الطلب الأساسي (متوازي) -->
-<div style="display: flex; justify-content: space-between; align-items: flex-start; margin: 24px 0 18px 0; gap: 24px;">
-  <div style="text-align: left; flex: 1; min-width: 180px;">
-    <div style="font-weight: 700; font-size: 15px; margin-bottom: 9px;">
-      ${requestData.requestDate ? `تاريخ: ${new Date(requestData.requestDate).toLocaleDateString('fr-MA')}` : ''}
-    </div>
+
+<div style="margin: 24px 0 18px 0;">
+  <!-- السطر الأعلى: التاريخ يمين، من مدير المؤسسة يسار -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
     <div style="font-weight: 700; font-size: 15px;">
       من مدير المؤسسة
     </div>
+    <div style="font-weight: 700; font-size: 15px;">
+      ${requestData.requestDate ? `تاريخ: ${new Date(requestData.requestDate).toLocaleDateString('fr-MA')}` : ''}
+    </div>
   </div>
-  <div style="text-align: right; flex: 2; min-width: 240px;">
-    <div style="font-weight: 700; font-size: 15px; margin-bottom: 8px;">
-      إلى السيد(ة) رئيس(ة) ${requestData.serviceType}
-    </div>
-    <div style="font-weight: bold; color: #1e40af; font-size: 17px;">
-      ${requestData.institutionName || student.originalInstitution}
-    </div>
+  
+  <!-- السطر الثاني: إلى السيد(ة)... في المنتصف -->
+  <div style="text-align: center; font-weight: 700; font-size: 15px; margin-bottom: 2px;">
+    إلى السيد(ة) رئيس(ة) ${requestData.serviceType}
+  </div>
+  <!-- اسم المؤسسة بخط أزرق أكبر تحتها -->
+  <div style="text-align: center; font-weight: bold; font-size: 18px; color: #1e40af;">
+    ${requestData.institutionName || student.originalInstitution}
   </div>
 </div>
+
+
+
 <!-- إطار رئيسي واسع كما في النسخة الأولى -->
 <div style="margin: 30px 0 32px 0; width: 100%; max-width: 900px; background: #f8f9fa; padding: 18px 28px 10px 28px; border-radius: 16px; border: 2px solid #1e40af; text-align: right;">
   <div style="font-size: 18px; font-weight: 900; color: #1e40af; font-family: 'Cairo', Tahoma, Arial, sans-serif; margin-bottom: 12px;">
