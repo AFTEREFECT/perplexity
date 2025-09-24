@@ -266,9 +266,9 @@ const generateRequestHTML = (
             بمؤسستنا للموسم الدراسي الحالي.
           </p>
         </div>
-        
+ 
         <!-- بيانات التلميذ/التلاميذ في جدول -->
-        <div style="margin-bottom: 15mm;">
+        <div style="margin-bottom: 6mm;">
           <h3 style="font-size: 14px; font-weight: bold; color: #374151; margin-bottom: 8mm; text-align: center;">
             بيانات التلميذ${isMultiple ? ' المطلوب ملفاتهم' : '(ة)'}
           </h3>
