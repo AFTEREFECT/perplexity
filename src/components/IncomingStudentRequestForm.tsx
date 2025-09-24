@@ -265,23 +265,23 @@ console.log('settings', institutionSettings)
       <div style="text-align: center; margin-bottom: 4mm; border-bottom: 1.5px solid #1e40af; padding-bottom: 2mm;">
         ${logoHTML}
         <div style="margin-top: 3mm;">
-          <div style="font-size: 16px; font-weight: bold; margin: 2mm 0;">
+          <div style="font-size: 14px; font-weight: bold; margin: 2mm 0;">
             الأكاديمية الجهوية للتربية و التكوين لجهة :  ${institutionSettings.academy}
           </div>
-          <div style="font-size: 16px; font-weight: bold; margin: 2mm 0;"> 
+          <div style="font-size: 14px; font-weight: bold; margin: 2mm 0;"> 
            المديرية الاقليمية بـ ${institutionSettings.directorate}
           </div>
-          <div style="font-size: 18px; color: #1e40af; margin: 2mm 0;">
+          <div style="font-size: 16px; color: #1e40af; margin: 2mm 0;">
             ${institutionSettings.institution}
           </div>
         </div>
       </div>
 <!-- سطر: تاريخ الطلب يمين - من مدير المؤسسة يسار -->
 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
-  <div style="font-weight: bold; font-size: 15px;">
+  <div style="font-weight: bold; font-size: 16px;">
     من مدير المؤسسة
   </div>
-  <div style="font-weight: bold; font-size: 15px;">
+  <div style="font-weight: bold; font-size: 13px;">
     ${requestData.requestDate ? `تاريخ: ${new Date(requestData.requestDate).toLocaleDateString('fr-MA')}` : ''}
   </div>
 </div>
@@ -289,18 +289,18 @@ console.log('settings', institutionSettings)
       
 <!-- رأس المراسلة -->
 <div style="margin: 24px 0 12px 0; display: flex; flex-direction: column; align-items: center;">
-  <div style="font-weight: bold; font-size: 15px; text-align: center; width:100%;">
+  <div style="font-weight: bold; font-size: 14px; text-align: center; width:100%;">
     إلى السيد(ة) مدير(ة):    ${requestData.institutionName || student.originalInstitution}       
   </div>
 
-  <div style="font-weight: bold; font-size: 15px; text-align: center; width:100%;">
+  <div style="font-weight: bold; font-size: 14px; text-align: center; width:100%;">
     - تحت إشراف السيد/ة المدير/ة الإقليمي -
   </div>
 
-    <div style="font-weight: bold; font-size: 15px; text-align: center; width:100%;">
+    <div style="font-weight: bold; font-size: 14px; text-align: center; width:100%;">
     ${requestData.serviceType}
   </div>
-    <div style="font-weight: bold; font-size: 15px; text-align: center; width:100%;">
+    <div style="font-weight: bold; font-size: 14px; text-align: center; width:100%;">
     -المديرية الاقليمية بـ ${institutionSettings.directorate} -
   </div>
  
