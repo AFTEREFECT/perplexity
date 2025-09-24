@@ -258,7 +258,7 @@ const generateRequestHTML = (
     ` : ''}
     ${requestData.includeReference && requestData.reference ? `
  
-</div>
+
 </div>
 </div>
         
