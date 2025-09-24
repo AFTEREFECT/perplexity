@@ -219,7 +219,7 @@ const generateRequestHTML = (
   إلى السيد(ة) مدير(ة)
 </div>
 <!-- اسم المؤسسة بخط أزرق أكبر تحتها -->
-<div style="text-align: center; font-weight: bold; font-size: 18px; color: #1e40af; margin-top: 2px;">
+<div style="text-align: center; font-size: 18px; color: #1e40af; margin-top: 2px;">
   ${requestData.institutionName || student.originalInstitution}
 </div>
 <!-- عارضة أفقية قصيرة تحت المؤسسة (وسط) -->
@@ -335,7 +335,7 @@ const generateRequestHTML = (
               إجمالي المراسلات السابقة لهذا التلميذ: ${reminderAlert.requestCount} مراسلة
             </p> -->
    <!-- الخاتمة -->
-        <div style="margin-bottom:5mm; text-align: justify; line-height: 1.8;">
+        <div style="margin-bottom:5mm; text-align: center; line-height: 1.8;">
           <p style="margin-bottom: 5mm;">
             نشكركم مسبقاً على تعاونكم وسرعة استجابتكم، ونؤكد لكم استعدادنا للتعاون المتبادل.
           </p>
