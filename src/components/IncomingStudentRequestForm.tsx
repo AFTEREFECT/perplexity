@@ -238,7 +238,7 @@ const IncomingStudentRequestForm: React.FC<IncomingStudentRequestFormProps> = ({
     const day = String(new Date().getDate()).padStart(2, '0');
     const sequence = userRequestNumber.padStart(2, '0');
     
-    return `RQ-${year}${month}${day}-${sequence}`;
+    return ` ${sequence}`;
   };
 
 
