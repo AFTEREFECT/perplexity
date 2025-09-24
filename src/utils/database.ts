@@ -1442,6 +1442,24 @@ this.db.exec(`
     await this.saveDatabase();
   }
 
+  // الحصول على إعدادات المؤسسة
+  async getInstitutionSettings(): Promise<any> {
+    try {
+      if (!this.db) {
+        throw new Error('قاعدة البيانات غير مهيأة');
+      }
+
+      const stmt = this.db.prepare('SELECT * FROM institution_settings ORDER BY updatedAt DESC LIMIT 1');
+      const result = stmt.getAsObject();
+      stmt.free();
+
+      return Object.keys(result).length > 0 ? result : null;
+    } catch (error) {
+      console.warn('خطأ في جلب إعدادات المؤسسة:', error);
+      return null;
+    }
+  }
+
   // باقي الدوال الموجودة...
   /**
    * إضافة تلميذ جديد
