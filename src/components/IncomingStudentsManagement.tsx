@@ -70,7 +70,7 @@ const IncomingStudentsManagement: React.FC = () => {
     filesReceived: 0,
     pendingFiles: 0,
     byLevel: {},
-    byInstitution: {},
+    byInstitution: {}, 
     byStatus: {}
   });
   const [loading, setLoading] = useState(true);
