@@ -57,10 +57,10 @@ const IncomingStudentRequestForm: React.FC<IncomingStudentRequestFormProps> = ({
   const [newServiceName, setNewServiceName] = useState('');
   const [newServiceDescription, setNewServiceDescription] = useState('');
   const [institutionSettings, setInstitutionSettings] = useState({
-    academy: 'الأكاديمية الجهوية للتربية والتكوين',
-    directorate: 'المديرية الإقليمية',
-    municipality: 'الجماعة',
-    institution: 'المؤسسة التعليمية'
+    academy: '',
+    directorate: '',
+    municipality: '',
+    institution: ''
   });
 
   useEffect(() => {
@@ -95,38 +95,61 @@ const IncomingStudentRequestForm: React.FC<IncomingStudentRequestFormProps> = ({
   // تحميل إعدادات المؤسسة الفعلية من قاعدة البيانات
   const loadInstitutionSettings = async () => {
     try {
-      console.log('🔄 تحميل إعدادات المؤسسة للتقرير...');
-      
-      // محاولة جلب الإعدادات من قاعدة البيانات أولاً
-      const settings = await dbManager.getInstitutionSettings();
-      if (settings) {
-        console.log('✅ تم جلب إعدادات المؤسسة من قاعدة البيانات:', settings);
-        setInstitutionSettings({
-          academy: settings.academy || 'الأكاديمية الجهوية للتربية والتكوين',
-          directorate: settings.directorate || 'المديرية الإقليمية',
-          municipality: settings.municipality || 'الجماعة',
-          institution: settings.institution || 'المؤسسة التعليمية'
-        });
-        return;
+      // جلب البيانات من قاعدة البيانات أولاً
+      try {
+        const settings = await dbManager.getInstitutionSettings();
+        if (settings && settings.academy) {
+          console.log('✅ تم جلب إعدادات المؤسسة من قاعدة البيانات:', settings);
+          setInstitutionSettings({
+            academy: settings.academy,
+            directorate: settings.directorate,
+            municipality: settings.municipality,
+            institution: settings.institution
+          });
+          return;
+        }
+      } catch (dbError) {
+        console.warn('لا توجد إعدادات في قاعدة البيانات');
       }
-      
-      // إذا لم توجد في قاعدة البيانات، جرب localStorage
-      const saved = localStorage.getItem('institutionSettings');
-      if (saved) {
-        const localSettings = JSON.parse(saved);
-        console.log('✅ تم جلب إعدادات المؤسسة من localStorage:', localSettings);
-        setInstitutionSettings({
-          academy: localSettings.academy || 'الأكاديمية الجهوية للتربية والتكوين',
-          directorate: localSettings.directorate || 'المديرية الإقليمية',
-          municipality: localSettings.municipality || 'الجماعة',
-          institution: localSettings.institution || 'المؤسسة التعليمية'
-        });
-        return;
+
+      // البحث في بيانات التلاميذ المستوردة
+      try {
+        const allStudents = await dbManager.getStudents();
+        const studentWithData = allStudents.find(s => 
+          s.region || s.province || s.municipality || s.institution
+        );
+        
+        if (studentWithData) {
+          console.log('✅ تم استخراج البيانات من التلاميذ:', studentWithData);
+          setInstitutionSettings({
+            academy: studentWithData.region || 'الأكاديمية الجهوية للتربية والتكوين',
+            directorate: studentWithData.province || 'المديرية الإقليمية', 
+            municipality: studentWithData.municipality || 'الجماعة',
+            institution: studentWithData.institution || 'المؤسسة التعليمية'
+          });
+          return;
+        }
+      } catch (studentsError) {
+        console.warn('لا توجد بيانات في التلاميذ');
       }
+
+      // استخدام القيم الافتراضية كحل أخير
+      setInstitutionSettings({
+        academy: 'الأكاديمية الجهوية للتربية والتكوين',
+        directorate: 'المديرية الإقليمية',
+        municipality: 'الجماعة', 
+        institution: 'المؤسسة التعليمية'
+      });
       
-      console.log('⚠️ لا توجد إعدادات محفوظة، سيتم استخدام القيم الافتراضية');
     } catch (error) {
       console.error('❌ خطأ في تحميل إعدادات المؤسسة:', error);
+      // استخدام القيم الافتراضية في حالة الخطأ
+      setInstitutionSettings({
+        academy: 'الأكاديمية الجهوية للتربية والتكوين',
+        directorate: 'المديرية الإقليمية',
+        municipality: 'الجماعة',
+        institution: 'المؤسسة التعليمية'
+      });
     }
   };
   // إضافة مصلحة جديدة
