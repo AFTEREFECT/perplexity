@@ -409,7 +409,7 @@ ${includeReminderInReport && reminderAlert ? `
  
  
     `
-  ;
+  
 
   // توليد PDF للطلب
   const generateRequestPDF = async () => {
