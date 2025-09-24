@@ -222,38 +222,29 @@ const generateRequestHTML = (
     </div>
   </div>
 </div>
-
-<!-- صف أرقام الطلب والإرسال والمرجع مجمّع داخل إطار أنيق -->
-<div style="background: #f8f9fa; border: 1.6px solid #1e40af; border-radius: 6mm; padding: 9px 0; display: flex; justify-content: center; align-items: center; gap: 44px; margin-bottom: 22px;">
-  <div style="font-weight: bold; font-size: 15px; color: #1e40af; font-family: 'Cairo', Tahoma, Arial, sans-serif;">
-    رقم الطلب: ${requestNumber}
-  </div>
-  ${requestData.includeSendingNumber && requestData.sendingNumber ? `
-    <div style="font-weight: bold; font-size: 15px; color: #1e40af; font-family: 'Cairo', Tahoma, Arial, sans-serif;">
-      رقم الإرسال: ${requestData.sendingNumber}
-    </div>
-  ` : ''}
-  ${requestData.includeReference && requestData.reference ? `
-    <div style="font-weight: bold; font-size: 15px; color: #1e40af; font-family: 'Cairo', Tahoma, Arial, sans-serif;">
-      المرجع: ${requestData.reference}
-    </div>
-  ` : ''}
-</div>
-${requestData.includeLastCorrespondenceDate && requestData.lastCorrespondenceDate ? `
-  <div style="text-align: left; margin-bottom: 15px;">
-    <span style="font-size: 12px; color: #6b7280;">
-      <strong>تاريخ آخر مراسلة:</strong> ${new Date(requestData.lastCorrespondenceDate).toLocaleDateString('fr-MA')}
-    </span>
-  </div>
-` : ''}
-
-<!-- العنوان الرئيسي للموضوع داخل إطار منفصل وبالخط الطبيعي -->
-<div style="margin: 30px 0 32px 0; text-align: center; background: #f8f9fa; padding: 12mm 0; border-radius: 7mm; border: 1px solid #1e40af;">
-  <h2 style="font-size: 18px; font-weight: 900; color: #1e40af; margin: 0; font-family: 'Cairo', Tahoma, Arial, sans-serif; letter-spacing: 0;">
+<!-- العنوان الرئيسي للموضوع داخل إطار صغير ويمين الصفحة -->
+<div style="width: 410px; margin: 18px 0 6px auto; text-align: right; background: #f8f9fa; padding: 8px 22px; border-radius: 9mm; border: 1.5px solid #1e40af;">
+  <h2 style="font-size: 17px; font-weight: 900; color: #1e40af; margin: 0; font-family: 'Cairo', Tahoma, Arial, sans-serif;">
     الموضوع: طلب ملف مدرسي ${isMultiple ? 'لمجموعة من التلاميذ' : 'لتلميذ(ة)'}
   </h2>
 </div>
 
+<!-- المرجعيات الثلاث مباشرة تحت الإطار الأول -->
+<div style="width: 410px; margin: 2px 0 0 auto; display: flex; justify-content: flex-start; align-items: center; gap: 32px; background: #f8f9fa; border: 1.5px solid #1e40af; border-radius: 7mm; padding: 7px 20px;">
+  <span style="font-weight: bold; font-size: 15px; color: #1e40af; font-family: 'Cairo', Tahoma, Arial, sans-serif;">
+    رقم الطلب: ${requestNumber}
+  </span>
+  ${requestData.includeSendingNumber && requestData.sendingNumber ? `
+    <span style="font-weight: bold; font-size: 15px; color: #1e40af; font-family: 'Cairo', Tahoma, Arial, sans-serif;">
+      رقم الإرسال: ${requestData.sendingNumber}
+    </span>
+  ` : ''}
+  ${requestData.includeReference && requestData.reference ? `
+    <span style="font-weight: bold; font-size: 15px; color: #1e40af; font-family: 'Cairo', Tahoma, Arial, sans-serif;">
+      المرجع: ${requestData.reference}
+    </span>
+  ` : ''}
+</div>
 
 
         
