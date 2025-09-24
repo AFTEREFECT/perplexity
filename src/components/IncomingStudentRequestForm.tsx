@@ -38,7 +38,8 @@ const IncomingStudentRequestForm: React.FC<IncomingStudentRequestFormProps> = ({
     serviceType: 'مصلحة الشؤون التربوية',
     institutionName: '',
     requestDate: new Date().toISOString().split('T')[0],
-    sendingNumber: '',
+    sendingNumber: '', // سيتم إدخاله يدوياً
+    requestNumber: '1', // رقم الطلب (1، 2، 3، 4، أو طلب التدخل)
     reference: '',
     lastCorrespondenceDate: '',
     notes: '',
@@ -56,6 +57,8 @@ const IncomingStudentRequestForm: React.FC<IncomingStudentRequestFormProps> = ({
   const [showAddServiceModal, setShowAddServiceModal] = useState(false);
   const [newServiceName, setNewServiceName] = useState('');
   const [newServiceDescription, setNewServiceDescription] = useState('');
+  const [showDeleteServiceModal, setShowDeleteServiceModal] = useState(false);
+  const [serviceToDelete, setServiceToDelete] = useState<string | null>(null);
   const [institutionSettings, setInstitutionSettings] = useState({
     academy: '',
     directorate: '',
@@ -77,7 +80,6 @@ const IncomingStudentRequestForm: React.FC<IncomingStudentRequestFormProps> = ({
         ...prev, 
         requestType: 'جماعي',
         institutionName: Array.from(uniqueInstitutions)[0] || '',
-        sendingNumber: generateSendingNumber(),
         reference: generateReference()
       }));
     } else {
@@ -85,7 +87,6 @@ const IncomingStudentRequestForm: React.FC<IncomingStudentRequestFormProps> = ({
         ...prev, 
         requestType: 'فردي',
         institutionName: students[0]?.originalInstitution || '',
-        sendingNumber: generateSendingNumber(),
         reference: generateReference()
       }));
     }
@@ -173,6 +174,35 @@ const IncomingStudentRequestForm: React.FC<IncomingStudentRequestFormProps> = ({
     }
   };
 
+  // حذف مصلحة
+  const handleDeleteService = () => {
+    if (!serviceToDelete) return;
+    
+    try {
+      const canDelete = ServiceManager.canDeleteService(serviceToDelete);
+      if (!canDelete) {
+        alert('لا يمكن حذف المصالح الافتراضية');
+        return;
+      }
+      
+      const success = ServiceManager.deleteService(serviceToDelete);
+      if (success) {
+        setServices(ServiceManager.getServices());
+        // إذا كانت المصلحة المحذوفة محددة حالياً، تغيير إلى الافتراضية
+        const deletedService = services.find(s => s.id === serviceToDelete);
+        if (deletedService && requestData.serviceType === deletedService.name) {
+          setRequestData(prev => ({ ...prev, serviceType: 'مصلحة الشؤون التربوية' }));
+        }
+        setShowDeleteServiceModal(false);
+        setServiceToDelete(null);
+        alert('تم حذف المصلحة بنجاح!');
+      } else {
+        alert('خطأ في حذف المصلحة');
+      }
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'خطأ في حذف المصلحة');
+    }
+  };
   // فحص الطلبات المشابهة
   const checkForSimilarRequests = () => {
     if (students.length > 0) {
@@ -196,23 +226,21 @@ const IncomingStudentRequestForm: React.FC<IncomingStudentRequestFormProps> = ({
 
   // توليد رقم الطلب
   const generateRequestNumber = (studentIndex: number = 0): string => {
+    // استخدام رقم الطلب المحدد من المستخدم
+    const userRequestNumber = requestData.requestNumber;
+    
+    if (userRequestNumber === 'طلب التدخل') {
+      return 'طلب التدخل';
+    }
+    
     const year = new Date().getFullYear();
     const month = String(new Date().getMonth() + 1).padStart(2, '0');
     const day = String(new Date().getDate()).padStart(2, '0');
-    const sequence = String(studentIndex + 1).padStart(3, '0');
+    const sequence = userRequestNumber.padStart(2, '0');
     
     return `RQ-${year}${month}${day}-${sequence}`;
   };
 
-  // توليد رقم الإرسال
-  const generateSendingNumber = (): string => {
-    const year = new Date().getFullYear();
-    const month = String(new Date().getMonth() + 1).padStart(2, '0');
-    const day = String(new Date().getDate()).padStart(2, '0');
-    const sequence = String(Math.floor(Math.random() * 999) + 1).padStart(3, '0');
-    
-    return `${year}/${month}/${day}-${sequence}`;
-  };
 
   // توليد المرجع
   const generateReference = (): string => {
@@ -285,15 +313,11 @@ console.log('settings', institutionSettings)
     الموضوع: طلب ملف مدرسي ${isMultiple ? 'لمجموعة من التلاميذ' : 'للتلميذ(ة)'}     رقم  : ${requestNumber}
   </div>
   <div style="display: flex; justify-content: flex-start; align-items: center; gap: 44px;">
-    <span style="color: #1e40af;">
-          <span style="color:#1e40af;">رقم الإرسال: ${requestData.sendingNumber}</span>
-  
-    </span>
     ${requestData.includeSendingNumber && requestData.sendingNumber ? `
-
+      <span style="color: #1e40af;">رقم الإرسال: ${requestData.sendingNumber}</span>
     ` : ''}
     ${requestData.includeReference && requestData.reference ? `
- 
+      <span style="color: #1e40af;">المرجع: ${requestData.reference}</span>
     ` : ''}
   </div>
 </div>
@@ -516,7 +540,7 @@ ${includeReminderInReport && reminderAlert ? `
           {/* معلومات التلاميذ */}
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
             <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
-              <Users className="w-5 h-5" />
+            disabled={!formData.studentId || !requestData.sendingNumber.trim()}
               التلاميذ المحددين ({students.length})
             </h3>
             <div className="max-h-32 overflow-y-auto space-y-2">
@@ -586,8 +610,8 @@ ${includeReminderInReport && reminderAlert ? `
                   >
                     <option value="">اختر المصلحة</option>
                     {services.map(service => (
-                      <option key={service.id} value={service.name}>
-                        {service.name}
+                      <option key={service.id} value={service.name} data-service-id={service.id}>
+                        {service.name} {!ServiceManager.canDeleteService(service.id) ? '(افتراضية)' : ''}
                       </option>
                     ))}
                   </select>
@@ -598,6 +622,23 @@ ${includeReminderInReport && reminderAlert ? `
                     title="إضافة مصلحة جديدة"
                   >
                     <Plus className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const selectedService = services.find(s => s.name === requestData.serviceType);
+                      if (selectedService && ServiceManager.canDeleteService(selectedService.id)) {
+                        setServiceToDelete(selectedService.id);
+                        setShowDeleteServiceModal(true);
+                      } else {
+                        alert('لا يمكن حذف المصالح الافتراضية');
+                      }
+                    }}
+                    disabled={!requestData.serviceType || !services.find(s => s.name === requestData.serviceType && ServiceManager.canDeleteService(s.id))}
+                    className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                    title="حذف المصلحة المحددة"
+                  >
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -620,16 +661,42 @@ ${includeReminderInReport && reminderAlert ? `
               {/* رقم الإرسال */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  رقم الإرسال
+                  رقم الإرسال *
                 </label>
                 <input
                   type="text"
                   name="sendingNumber"
                   value={requestData.sendingNumber}
                   onChange={handleChange}
-                  placeholder="مثال: 2025 -001"
+                  placeholder="مثال: 2025/09/24-221"
+                  required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  أدخل رقم الإرسال يدوياً (مطلوب)
+                </p>
+              </div>
+              
+              {/* رقم الطلب */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  رقم الطلب *
+                </label>
+                <select
+                  name="requestNumber"
+                  value={requestData.requestNumber}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                >
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="طلب التدخل">طلب التدخل</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  اختر رقم الطلب أو "طلب التدخل"
+                </p>
               </div>
               
               {/* المرجع */}
@@ -955,9 +1022,69 @@ ${includeReminderInReport && reminderAlert ? `
             </div>
           </div>
         )}
+
+        {/* مودال حذف المصلحة */}
+        {showDeleteServiceModal && serviceToDelete && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-60">
+            <div className="bg-white rounded-xl max-w-md w-full">
+              <div className="flex items-center justify-between p-6 border-b">
+                <h2 className="text-xl font-bold text-gray-900">تأكيد حذف المصلحة</h2>
+                <button
+                  onClick={() => {
+                    setShowDeleteServiceModal(false);
+                    setServiceToDelete(null);
+                  }}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                    <AlertCircle className="w-6 h-6 text-red-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-red-900">حذف المصلحة</h3>
+                    <p className="text-red-700 text-sm">
+                      هل أنت متأكد من حذف هذه المصلحة؟
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-red-50 p-4 rounded-lg mb-6 border border-red-200">
+                  <p className="text-red-800 font-medium">
+                    المصلحة: {services.find(s => s.id === serviceToDelete)?.name}
+                  </p>
+                  <p className="text-red-700 text-sm mt-1">
+                    سيتم حذف هذه المصلحة نهائياً من القائمة
+                  </p>
+                </div>
       </div>
     </div>
   );
 };
 
+                <div className="flex gap-4">
+                  <button
+                    onClick={handleDeleteService}
+                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200"
+                  >
+                    تأكيد الحذف
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowDeleteServiceModal(false);
+                      setServiceToDelete(null);
+                    }}
+                    className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors duration-200"
+                  >
+                    إلغاء
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 export default IncomingStudentRequestForm;
