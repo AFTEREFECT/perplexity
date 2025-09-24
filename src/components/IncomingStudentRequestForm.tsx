@@ -615,31 +615,38 @@ ${includeReminderInReport && reminderAlert ? `
                       </option>
                     ))}
                   </select>
-                 <button
-  type="button" 
-  onClick={() => setShowAddServiceModal(true)}
-  className="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors duration-200"
-  title="إضافة مصلحة جديدة"
->
-  <Plus className="w-4 h-4" />
-</button>
-<button
-  type="button"
-  onClick={() => {
-    const selectedService = services.find(s => s.name === requestData.serviceType);
-    if (selectedService && ServiceManager.canDeleteService(selectedService.id)) {
-      setServiceToDelete(selectedService.id);
-      setShowDeleteServiceModal(true);
-    } else {
-      alert('لا يمكن حذف المصالح الافتراضية');
+               <div className="flex items-center gap-2">
+  <button
+    type="button" 
+    onClick={() => setShowAddServiceModal(true)}
+    className="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors duration-200"
+    title="إضافة مصلحة جديدة"
+  >
+    <Plus className="w-4 h-4" />
+  </button>
+  <button
+    type="button"
+    onClick={() => {
+      const selectedService = services.find(s => s.name === requestData.serviceType);
+      if (selectedService && ServiceManager.canDeleteService(selectedService.id)) {
+        setServiceToDelete(selectedService.id);
+        setShowDeleteServiceModal(true);
+      } else {
+        alert('لا يمكن حذف المصالح الافتراضية');
+      }
+    }}
+    disabled={
+      !requestData.serviceType || 
+      !services.find(
+        s => s.name === requestData.serviceType && ServiceManager.canDeleteService(s.id)
+      )
     }
-  }}
-  disabled={!requestData.serviceType || !services.find(s => s.name === requestData.serviceType && ServiceManager.canDeleteService(s.id))}
-  className="p-2 rounded-full bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-  title="حذف المصلحة المحددة"
->
-  <Trash2 className="w-4 h-4" />
-</button>
+    className="p-2 rounded-full bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+    title="حذف المصلحة المحددة"
+  >
+    <Trash2 className="w-4 h-4" />
+  </button>
+</div>
 
                 </div>
               </div>
