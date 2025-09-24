@@ -286,13 +286,14 @@ console.log('settings', institutionSettings)
   </div>
   <div style="display: flex; justify-content: flex-start; align-items: center; gap: 44px;">
     <span style="color: #1e40af;">
+          <span style="color:#1e40af;">رقم الإرسال: ${requestData.sendingNumber}</span>
       رقم الطلب: ${requestNumber}
     </span>
     ${requestData.includeSendingNumber && requestData.sendingNumber ? `
-      <span style="color:#1e40af;">رقم الإرسال: ${requestData.sendingNumber}</span>
+
     ` : ''}
     ${requestData.includeReference && requestData.reference ? `
-      <span style="color:#1e40af;">المرجع: ${requestData.reference}</span>
+ 
     ` : ''}
   </div>
 </div>
