@@ -603,12 +603,18 @@ ${includeReminderInReport && reminderAlert ? `
                 </label>
                 <div className="flex gap-2">
                <div className="flex items-center gap-2">
+<div className="flex items-center gap-2">
   <select
     className="flex-1 min-w-[120px] max-w-[200px] px-2 py-1 rounded border border-gray-300"
     value={requestData.serviceType}
     onChange={e => setRequestData({ ...requestData, serviceType: e.target.value })}
   >
-    {/* خيارات */}
+    <option value="">اختر المصلحة</option>
+    {services.map(service => (
+      <option key={service.id} value={service.name}>
+        {service.name}
+      </option>
+    ))}
   </select>
   <button
     type="button"
@@ -621,8 +627,13 @@ ${includeReminderInReport && reminderAlert ? `
   <button
     type="button"
     onClick={() => {
-      const selectedService = services.find(s => s.name === requestData.serviceType);
-      if (selectedService && ServiceManager.canDeleteService(selectedService.id)) {
+      const selectedService = services.find(
+        s => s.name === requestData.serviceType
+      );
+      if (
+        selectedService &&
+        ServiceManager.canDeleteService(selectedService.id)
+      ) {
         setServiceToDelete(selectedService.id);
         setShowDeleteServiceModal(true);
       } else {
@@ -630,9 +641,11 @@ ${includeReminderInReport && reminderAlert ? `
       }
     }}
     disabled={
-      !requestData.serviceType || 
+      !requestData.serviceType ||
       !services.find(
-        s => s.name === requestData.serviceType && ServiceManager.canDeleteService(s.id)
+        s =>
+          s.name === requestData.serviceType &&
+          ServiceManager.canDeleteService(s.id)
       )
     }
     className="p-2 rounded-full bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
