@@ -602,22 +602,16 @@ ${includeReminderInReport && reminderAlert ? `
                   نوع المصلحة *
                 </label>
                 <div className="flex gap-2">
-                  <select
-                    name="serviceType"
-                    value={requestData.serviceType}
-                    onChange={handleChange}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  >
-                    <option value="">اختر المصلحة</option>
-                    {services.map(service => (
-                      <option key={service.id} value={service.name} data-service-id={service.id}>
-                        {service.name} {!ServiceManager.canDeleteService(service.id) }
-                      </option>
-                    ))}
-                  </select>
                <div className="flex items-center gap-2">
+  <select
+    className="flex-1 min-w-[120px] max-w-[200px] px-2 py-1 rounded border border-gray-300"
+    value={requestData.serviceType}
+    onChange={e => setRequestData({ ...requestData, serviceType: e.target.value })}
+  >
+    {/* خيارات */}
+  </select>
   <button
-    type="button" 
+    type="button"
     onClick={() => setShowAddServiceModal(true)}
     className="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors duration-200"
     title="إضافة مصلحة جديدة"
@@ -647,6 +641,7 @@ ${includeReminderInReport && reminderAlert ? `
     <Trash2 className="w-4 h-4" />
   </button>
 </div>
+
 
                 </div>
               </div>
