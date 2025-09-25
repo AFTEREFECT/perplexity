@@ -220,17 +220,17 @@ const IncomingStudentRequestForm: React.FC<IncomingStudentRequestFormProps> = ({
     const selectedService = services.find(s => s.id === requestData.selectedService);
     const serviceName = selectedService ? selectedService.name : 'مصلحة الشؤون التربوية';
     
-    // تحديد تنسيق المرسل إليه حسب نوع الإرسال
-    const recipientFormat = requestData.locationType === 'خارج الإقليم' 
-      ? `إلى السيد مدير ثانوية .................. (المؤسسة الأصلية للتلميذ الوافد)
-         تحت إشراف السيد(ة) المدير(ة) الإقليمي -
-         - مصلحة تأطير و تنشيط المؤسسات التعليمية، و التوجيه
-         - المديرية الإقليمية ب............(المديرية الاستقبال)
-         - الأكاديمية .............(الأكاديمية الأصلية)`
-      : `إلى السيد(ة) مدير(ة) مصلحة الشؤون التربوية
-         ثانوية المسكيني
-         تحت إشراف السيد(ة) المدير(ة) الإقليمي -
-         - المديرية الإقليمية -`;
+    // تحديد تنسيق المرسل إليه حسب نوع الإرسال - بنفس التنسيق الأصلي
+    const recipientSection = requestData.locationType === 'خارج الإقليم' 
+      ? `إلى السيد مدير ثانوية ${student.originalInstitution || '................'} (المؤسسة الأصلية للتلميذ الوافد)
+تحت إشراف السيد(ة) المدير(ة) الإقليمي -
+- مصلحة تأطير و تنشيط المؤسسات التعليمية، و التوجيه
+- المديرية الإقليمية ب${student.originalDirectorate || '............'}(المديرية الاستقبال)
+- الأكاديمية ${student.originalAcademy || '............'}(الأكاديمية الأصلية)`
+      : `إلى السيد(ة) مدير(ة) ${serviceName}
+${student.originalInstitution || 'ثانوية المسكيني'}
+تحت إشراف السيد(ة) المدير(ة) الإقليمي -
+- ${institutionSettings.directorate} -`;
 
     // فحص الطلبات السابقة للتذكير
     const reminderInfo = correspondenceReminder.checkForSimilarRequests(
