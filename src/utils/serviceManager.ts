@@ -10,26 +10,26 @@ export interface Service {
 export const DEFAULT_SERVICES: Service[] = [
   {
     id: 'educational_affairs',
-    name: 'مصلحة الشؤون التربوية',
-    description: 'المصلحة المسؤولة عن الشؤون التربوية والتعليمية',
+    name: 'مصلحة تأطير و تنشيط المؤسسات التعليمية و التوجيه',
+    description: 'مصلحة تأطير و تنشيط المؤسسات التعليمية و التوجيه',
     createdAt: new Date().toISOString()
   },
   {
     id: 'student_affairs',
-    name: 'مصلحة شؤون التلاميذ',
-    description: 'المصلحة المسؤولة عن شؤون التلاميذ والتسجيل',
+    name: 'مصلحة الشؤون التربوية',
+    description: 'مصلحة الشؤون التربوية',
     createdAt: new Date().toISOString()
   },
   {
     id: 'administrative_affairs',
-    name: 'مصلحة الشؤون الإدارية',
-    description: 'المصلحة المسؤولة عن الشؤون الإدارية والمالية',
+    name: 'مصلحة الشؤون الإدارية والمالية ',
+    description: 'مصلحة الشؤون الإدارية والمالية',
     createdAt: new Date().toISOString()
   },
   {
     id: 'guidance_affairs',
-    name: 'مصلحة التأطير والتوجيه',
-    description: 'المصلحة المسؤولة عن التأطير والتوجيه التربوي',
+    name: 'مصلحة التخطيط والخريطة المدرسية',
+    description: 'المصلحة المسؤولة عن التخطيط الخريطة التربوي',
     createdAt: new Date().toISOString()
   }
 ];
