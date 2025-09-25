@@ -5,7 +5,7 @@ import html2canvas from 'html2canvas';
 import { dbManager } from '../utils/database';
 import ServiceManager, { DEFAULT_SERVICES } from '../utils/serviceManager';
 import { correspondenceReminder } from '../utils/correspondenceReminder';
-import { getSubjectByRequestType } from "../utils/getSubjectByRequestType";
+ 
 
 
 interface IncomingStudent {
