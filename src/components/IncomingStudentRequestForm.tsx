@@ -277,7 +277,7 @@ ${student.originalInstitution || 'ثانوية المسكيني'}
 
         <!-- المرسل إليه -->
         <div style="text-align: center; margin-bottom: 15mm; font-size: 12px; line-height: 1.8;">
-          ${recipientFormat}
+          ${recipientSection}
         </div>
 
         <!-- الموضوع -->
