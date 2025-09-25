@@ -61,7 +61,7 @@ interface IncomingStudentStats {
 }
 
 const IncomingStudentsManagement: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('management');
+  const [activeTab, setActiveTab] = useState('overview');
   const [students, setStudents] = useState<IncomingStudent[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<IncomingStudent[]>([]);
   const [stats, setStats] = useState<IncomingStudentStats>({
@@ -381,12 +381,10 @@ const IncomingStudentsManagement: React.FC = () => {
 
         {/* قائمة الأقسام */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-           {[
-            { id: 'management', label: 'إدارة الوافدين', icon: Users, color: 'purple' },
-           { id: 'import', label: 'استيراد الوافدين', icon: Upload, color: 'green' },
-            { id: 'overview', label: 'نظرة عامة', icon: BarChart3, color: 'blue' }
-       
-         
+          {[
+            { id: 'overview', label: 'نظرة عامة', icon: BarChart3, color: 'blue' },
+            { id: 'import', label: 'استيراد الوافدين', icon: Upload, color: 'green' },
+            { id: 'management', label: 'إدارة الوافدين', icon: Users, color: 'purple' }
           ].map((tab) => {
             const IconComponent = tab.icon;
             return (

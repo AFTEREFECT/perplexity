@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { X, Send, Download, Building, User, Calendar, FileText, AlertCircle, CheckCircle, Plus, Trash2, MapPin, Globe } from 'lucide-react';
+import { X, Send, FileText, Building, Calendar, Users, Download, Printer, AlertCircle, CheckCircle, Plus, Trash2 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { logoManager } from '../utils/logoManager';
+import { correspondenceReminder, ReminderAlert } from '../utils/correspondenceReminder';
+import ServiceManager from '../utils/serviceManager';
 import { dbManager } from '../utils/database';
-import ServiceManager, { DEFAULT_SERVICES } from '../utils/serviceManager';
-import { correspondenceReminder } from '../utils/correspondenceReminder';
- 
-
 
 interface IncomingStudent {
   id: string;
@@ -14,27 +13,14 @@ interface IncomingStudent {
   lastName: string;
   firstName: string;
   transferDate: string;
-  transferType: string;
   originalInstitution: string;
-  originalDirectorate: string;
-  originalAcademy: string;
-  academy: string;
-  directorate: string;
   level: string;
-  municipality: string;
-  institution: string;
-  academicYear: string;
-  fileStatus: 'لم يتم الإرسال' | 'طلب مرسل' | 'ملف تم التوصل به' | 'مكرر' | 'غير معروف';
   requestCount: number;
-  requestDates: string[];
-  lastRequestDate?: string;
   notes: string;
   linkedGender?: 'ذكر' | 'أنثى' | 'غير محدد';
   linkedSection?: string;
   linkedNationalId?: string;
   isLinked: boolean;
-  createdAt: string;
-  updatedAt: string;
 }
 
 interface IncomingStudentRequestFormProps {
@@ -43,467 +29,503 @@ interface IncomingStudentRequestFormProps {
   onCancel: () => void;
 }
 
-interface InstitutionSettings {
-  academy: string;
-  directorate: string;
-  municipality: string;
-  institution: string;
-  academicYear: string;
-}
-
 const IncomingStudentRequestForm: React.FC<IncomingStudentRequestFormProps> = ({ 
   students, 
   onRequestSent, 
   onCancel 
 }) => {
   const [requestData, setRequestData] = useState({
+    serviceType: 'مصلحة الشؤون التربوية',
+    institutionName: '',
     requestDate: new Date().toISOString().split('T')[0],
-    requestNumber: '', // سيكتبه المستخدم
-    sendingNumber: '', // سيكتبه المستخدم
-    requestType: '1' as '1' | '2' | '3' | '4' | 'طلب التدخل',
-    locationType: 'داخل الإقليم' as 'داخل الإقليم' | 'خارج الإقليم',
-    selectedService: '',
-    targetInstitution: '',
-    targetDirectorate: '',
-    targetAcademy: '',
-    includeReminder: true,
-    includeStudentDetails: true,
-    includeCorrespondenceHistory: false
+    sendingNumber: '', // سيتم إدخاله يدوياً
+    requestNumber: '1', // رقم الطلب (1، 2، 3، 4، أو طلب التدخل)
+    reference: '',
+    lastCorrespondenceDate: '',
+    notes: '',
+    requestType: 'فردي' as 'فردي' | 'جماعي',
+    // خيارات التقرير المطبوع
+    includeSendingNumber: true,
+    includeReference: true,
+    includeLastCorrespondenceDate: true
   });
-
-  const [institutionSettings, setInstitutionSettings] = useState<InstitutionSettings>({
-    academy: 'الأكاديمية الجهوية للتربية والتكوين',
-    directorate: 'المديرية الإقليمية',
-    municipality: 'الجماعة',
-    institution: 'المؤسسة التعليمية',
-    academicYear: '2025/2026'
-  });
-
+  const [generating, setGenerating] = useState(false);
+  const [reminderAlert, setReminderAlert] = useState<ReminderAlert | null>(null);
+  const [showReminderModal, setShowReminderModal] = useState(false);
+  const [includeReminderInReport, setIncludeReminderInReport] = useState(false);
   const [services, setServices] = useState(ServiceManager.getServices());
-  const [showAddService, setShowAddService] = useState(false);
+  const [showAddServiceModal, setShowAddServiceModal] = useState(false);
   const [newServiceName, setNewServiceName] = useState('');
   const [newServiceDescription, setNewServiceDescription] = useState('');
-  const [generating, setGenerating] = useState(false);
-  const [message, setMessage] = useState('');
-  const [messageType, setMessageType] = useState<'success' | 'error' | ''>('');
+  const [showDeleteServiceModal, setShowDeleteServiceModal] = useState(false);
+  const [serviceToDelete, setServiceToDelete] = useState<string | null>(null);
+  const [institutionSettings, setInstitutionSettings] = useState({
+    academy: '',
+    directorate: '',
+    municipality: '',
+    institution: ''
+  });
 
   useEffect(() => {
+    // فحص الطلبات المشابهة عند تحميل النموذج
+    checkForSimilarRequests();
+    
+    // تحميل إعدادات المؤسسة الفعلية
     loadInstitutionSettings();
-    loadServices();
-  }, []);
+    
+    // تحديد نوع الطلب بناءً على عدد التلاميذ والمؤسسات
+    const uniqueInstitutions = new Set(students.map(s => s.originalInstitution));
+    if (uniqueInstitutions.size === 1 && students.length > 1) {
+      setRequestData(prev => ({ 
+        ...prev, 
+        requestType: 'جماعي',
+        institutionName: Array.from(uniqueInstitutions)[0] || '',
+        reference: generateReference()
+      }));
+    } else {
+      setRequestData(prev => ({ 
+        ...prev, 
+        requestType: 'فردي',
+        institutionName: students[0]?.originalInstitution || '',
+        reference: generateReference()
+      }));
+    }
 
-  // تحميل إعدادات المؤسسة
+  }, [students]);
+
+  // تحميل إعدادات المؤسسة الفعلية من قاعدة البيانات
   const loadInstitutionSettings = async () => {
     try {
-      console.log('🔄 بدء تحميل إعدادات المؤسسة...');
-      
-      // محاولة جلب من قاعدة البيانات أولاً
+      // جلب البيانات من قاعدة البيانات أولاً
       try {
-        const dbSettings = await dbManager.getInstitutionSettings();
-        if (dbSettings) {
-          console.log('✅ تم جلب الإعدادات من قاعدة البيانات:', dbSettings);
+        const settings = await dbManager.getInstitutionSettings();
+        if (settings && settings.academy) {
+          console.log('✅ تم جلب إعدادات المؤسسة من قاعدة البيانات:', settings);
           setInstitutionSettings({
-            academy: dbSettings.academy || 'الأكاديمية الجهوية للتربية والتكوين',
-            directorate: dbSettings.directorate || 'المديرية الإقليمية',
-            municipality: dbSettings.municipality || 'الجماعة',
-            institution: dbSettings.institution || 'المؤسسة التعليمية',
-            academicYear: dbSettings.academicYear || '2025/2026'
+            academy: settings.academy,
+            directorate: settings.directorate,
+            municipality: settings.municipality,
+            institution: settings.institution
           });
           return;
         }
-      } catch (error) {
-        console.warn('⚠️ لا توجد إعدادات في قاعدة البيانات، البحث في بيانات التلاميذ...');
+      } catch (dbError) {
+        console.warn('لا توجد إعدادات في قاعدة البيانات');
       }
 
       // البحث في بيانات التلاميذ المستوردة
-      const allStudents = await dbManager.getStudents();
-      if (allStudents.length > 0) {
-        const latestStudentWithMetadata = allStudents
-          .filter(s => s.region || s.province || s.municipality || s.institution)
-          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+      try {
+        const allStudents = await dbManager.getStudents();
+        const studentWithData = allStudents.find(s => 
+          s.region || s.province || s.municipality || s.institution
+        );
         
-        if (latestStudentWithMetadata) {
-          console.log('✅ تم استخراج الإعدادات من بيانات التلاميذ:', latestStudentWithMetadata);
+        if (studentWithData) {
+          console.log('✅ تم استخراج البيانات من التلاميذ:', studentWithData);
           setInstitutionSettings({
-            academy: latestStudentWithMetadata.region || 'الأكاديمية الجهوية للتربية والتكوين',
-            directorate: latestStudentWithMetadata.province || 'المديرية الإقليمية',
-            municipality: latestStudentWithMetadata.municipality || 'الجماعة',
-            institution: latestStudentWithMetadata.institution || 'المؤسسة التعليمية',
-            academicYear: latestStudentWithMetadata.academicYear || '2025/2026'
+            academy: studentWithData.region || 'الأكاديمية الجهوية للتربية والتكوين',
+            directorate: studentWithData.province || 'المديرية الإقليمية', 
+            municipality: studentWithData.municipality || 'الجماعة',
+            institution: studentWithData.institution || 'المؤسسة التعليمية'
           });
+          return;
         }
+      } catch (studentsError) {
+        console.warn('لا توجد بيانات في التلاميذ');
       }
+
+      // استخدام القيم الافتراضية كحل أخير
+      setInstitutionSettings({
+        academy: 'الأكاديمية الجهوية للتربية والتكوين',
+        directorate: 'المديرية الإقليمية',
+        municipality: 'الجماعة', 
+        institution: 'المؤسسة التعليمية'
+      });
+      
     } catch (error) {
       console.error('❌ خطأ في تحميل إعدادات المؤسسة:', error);
+      // استخدام القيم الافتراضية في حالة الخطأ
+      setInstitutionSettings({
+        academy: 'الأكاديمية الجهوية للتربية والتكوين',
+        directorate: 'المديرية الإقليمية',
+        municipality: 'الجماعة',
+        institution: 'المؤسسة التعليمية'
+      });
     }
   };
-
-  // تحميل المصالح
-  const loadServices = () => {
-    setServices(ServiceManager.getServices());
-  };
-
-  // عرض رسالة للمستخدم
-  const showMessage = (text: string, type: 'success' | 'error') => {
-    setMessage(text);
-    setMessageType(type);
-    setTimeout(() => {
-      setMessage('');
-      setMessageType('');
-    }, 3000);
-  };
-
   // إضافة مصلحة جديدة
   const handleAddService = () => {
-    if (!newServiceName.trim()) {
-      showMessage('يرجى إدخال اسم المصلحة', 'error');
-      return;
-    }
-
     try {
-      ServiceManager.addService(newServiceName.trim(), newServiceDescription.trim());
-      loadServices();
+      if (!newServiceName.trim()) {
+        alert('يرجى إدخال اسم المصلحة');
+        return;
+      }
+
+      const newService = ServiceManager.addService(newServiceName, newServiceDescription);
+      setServices(ServiceManager.getServices());
+      setRequestData(prev => ({ ...prev, serviceType: newService.name }));
+      setShowAddServiceModal(false);
       setNewServiceName('');
       setNewServiceDescription('');
-      setShowAddService(false);
-      showMessage('تم إضافة المصلحة بنجاح!', 'success');
+      
+      alert('تم إضافة المصلحة بنجاح!');
     } catch (error) {
-      console.error('خطأ في إضافة المصلحة:', error);
-      showMessage(error instanceof Error ? error.message : 'خطأ في إضافة المصلحة', 'error');
+      alert(error instanceof Error ? error.message : 'خطأ في إضافة المصلحة');
     }
   };
 
   // حذف مصلحة
-  const handleDeleteService = (serviceId: string) => {
-    const service = services.find(s => s.id === serviceId);
-    if (!service) return;
-
-    if (!ServiceManager.canDeleteService(serviceId)) {
-      showMessage('لا يمكن حذف المصالح الافتراضية', 'error');
-      return;
-    }
-
-    if (confirm(`هل أنت متأكد من حذف المصلحة "${service.name}"؟`)) {
-      try {
-        const success = ServiceManager.deleteService(serviceId);
-        if (success) {
-          loadServices();
-          // إعادة تعيين المصلحة المحددة إذا تم حذفها
-          if (requestData.selectedService === serviceId) {
-            setRequestData(prev => ({ ...prev, selectedService: '' }));
-          }
-          showMessage('تم حذف المصلحة بنجاح!', 'success');
-        } else {
-          showMessage('خطأ في حذف المصلحة', 'error');
+  const handleDeleteService = () => {
+    if (!serviceToDelete) return;
+    
+    try {
+      const canDelete = ServiceManager.canDeleteService(serviceToDelete);
+      if (!canDelete) {
+        alert('لا يمكن حذف المصالح الافتراضية');
+        return;
+      }
+      
+      const success = ServiceManager.deleteService(serviceToDelete);
+      if (success) {
+        setServices(ServiceManager.getServices());
+        // إذا كانت المصلحة المحذوفة محددة حالياً، تغيير إلى الافتراضية
+        const deletedService = services.find(s => s.id === serviceToDelete);
+        if (deletedService && requestData.serviceType === deletedService.name) {
+          setRequestData(prev => ({ ...prev, serviceType: 'مصلحة الشؤون التربوية' }));
         }
-      } catch (error) {
-        console.error('خطأ في حذف المصلحة:', error);
-        showMessage('خطأ في حذف المصلحة', 'error');
+        setShowDeleteServiceModal(false);
+        setServiceToDelete(null);
+        alert('تم حذف المصلحة بنجاح!');
+      } else {
+        alert('خطأ في حذف المصلحة');
+      }
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'خطأ في حذف المصلحة');
+    }
+  };
+  // فحص الطلبات المشابهة
+  const checkForSimilarRequests = () => {
+    if (students.length > 0) {
+      const firstStudent = students[0];
+      const institutionName = firstStudent.originalInstitution || '';
+      
+      if (institutionName) {
+        const reminder = correspondenceReminder.checkForSimilarRequests(
+          firstStudent.studentId, 
+          institutionName
+        );
+        
+        if (reminder.hasReminder) {
+          setReminderAlert(reminder);
+          setShowReminderModal(true);
+        }
       }
     }
   };
 
-  // تحديد موضوع الطلب حسب رقم الطلب
-  const getSubjectByRequestType = (type: string) => {
-    switch (type) {
-      case '1': return 'طلب ملف مدرسي للتلميذ(ة) رقم : 01';
-      case '2': return 'طلب ملف مدرسي للتلميذ(ة) رقم : 02';
-      case '3': return 'طلب ملف مدرسي للتلميذ(ة) رقم : 03';
-      case '4': return 'طلب ملف مدرسي للتلميذ(ة) رقم : 04';
-      case 'طلب التدخل': return 'طلب التدخل';
-      default: return 'طلب ملف مدرسي للتلميذ(ة)';
+
+  // توليد رقم الطلب
+  const generateRequestNumber = (studentIndex: number = 0): string => {
+    // استخدام رقم الطلب المحدد من المستخدم
+    const userRequestNumber = requestData.requestNumber;
+    
+    if (userRequestNumber === 'طلب التدخل') {
+      return 'طلب التدخل';
     }
+    
+    const year = new Date().getFullYear();
+    const month = String(new Date().getMonth() + 1).padStart(2, '0');
+    const day = String(new Date().getDate()).padStart(2, '0');
+    const sequence = userRequestNumber.padStart(2, '0');
+    
+    return `RQ-${year}${month}${day}-${sequence}`;
   };
 
-  // توليد HTML للطلب حسب نوع الإرسال
-  const generateRequestHTML = (student: IncomingStudent) => {
-    const selectedService = services.find(s => s.id === requestData.selectedService);
-    const serviceName = selectedService ? selectedService.name : 'مصلحة الشؤون التربوية';
+
+  // توليد المرجع
+  const generateReference = (): string => {
+    const year = new Date().getFullYear();
+    const month = String(new Date().getMonth() + 1).padStart(2, '0');
     
-    // تحديد تنسيق المرسل إليه حسب نوع الإرسال - بنفس التنسيق الأصلي
-    const recipientSection = requestData.locationType === 'خارج الإقليم' 
-      ? `إلى السيد مدير ثانوية ${student.originalInstitution || '................'} (المؤسسة الأصلية للتلميذ الوافد)
-تحت إشراف السيد(ة) المدير(ة) الإقليمي -
-- مصلحة تأطير و تنشيط المؤسسات التعليمية، و التوجيه
-- المديرية الإقليمية ب${student.originalDirectorate || '............'}(المديرية الاستقبال)
-- الأكاديمية ${student.originalAcademy || '............'}(الأكاديمية الأصلية)`
-      : `إلى السيد(ة) مدير(ة) ${serviceName}
-${student.originalInstitution || 'ثانوية المسكيني'}
-تحت إشراف السيد(ة) المدير(ة) الإقليمي -
-- ${institutionSettings.directorate} -`;
+    return `REF-${year}${month}-${String(Math.floor(Math.random() * 999) + 1).padStart(3, '0')}`;
+  };
 
-    // فحص الطلبات السابقة للتذكير
-    const reminderInfo = correspondenceReminder.checkForSimilarRequests(
-      student.studentId, 
-      student.originalInstitution
-    );
-
-    return `
-      <div style="
-        font-family: 'Cairo', Arial, sans-serif;
-        direction: rtl;
-        background: white;
-        color: #000;
-        line-height: 1.6;
-        padding: 15mm;
-        width: 210mm;
-        min-height: 297mm;
-        margin: 0 auto;
-        box-sizing: border-box;
-        position: relative;
-      ">
-        <!-- رأس الوثيقة -->
-        <div style="text-align: center; margin-bottom: 15mm; border-bottom: 2px solid #1e40af; padding-bottom: 8mm;">
-          <div style="font-size: 14px; font-weight: bold; color: #1e40af; margin-bottom: 3mm;">
-            ${institutionSettings.academy}
+  // توليد محتوى HTML للطلب
+ 
+const generateRequestHTML = (
+  student: IncomingStudent,
+  requestNumber: string,
+  isMultiple: boolean = false
+) => {
+  const logoHTML = logoManager.getLogoHTML();
+console.log('settings', institutionSettings)
+  return `
+    <div style="font-family: 'Cairo', Arial, sans-serif; direction: rtl; padding: 4mm; line-height: 1.7; background: white; color: #000;">
+      <!-- رأس الوثيقة -->
+      <div style="text-align: center; margin-bottom: 4mm; border-bottom: 1.5px solid #1e40af; padding-bottom: 2mm;">
+        ${logoHTML}
+        <div style="margin-top: 3mm;">
+          <div style="font-size: 16px; font-weight: bold; margin: 2mm 0;">
+            الأكاديمية الجهوية للتربية و التكوين لجهة :  ${institutionSettings.academy}
           </div>
-          <div style="font-size: 12px; color: #374151; margin-bottom: 2mm;">
-            ${institutionSettings.directorate}
+          <div style="font-size: 16px; font-weight: bold; margin: 2mm 0;"> 
+           المديرية الاقليمية بـ ${institutionSettings.directorate}
           </div>
-          <div style="font-size: 12px; color: #374151;">
+          <div style="font-size: 18px; color: #1e40af; margin: 2mm 0;">
             ${institutionSettings.institution}
           </div>
         </div>
-
-        <!-- معلومات الإرسال -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20mm; margin-bottom: 15mm; font-size: 11px;">
-          <div style="text-align: right;">
-            <p style="margin: 0;"><strong>تاريخ:</strong> ${new Date(requestData.requestDate).toLocaleDateString('ar-EG')}</p>
-          </div>
-          <div style="text-align: left;">
-            <p style="margin: 0;"><strong>من مدير المؤسسة</strong></p>
-          </div>
-        </div>
-
-        <!-- المرسل إليه -->
-        <div style="text-align: center; margin-bottom: 15mm; font-size: 12px; line-height: 1.8;">
-          ${recipientSection}
-        </div>
-
-        <!-- الموضوع -->
-        <div style="text-align: center; margin-bottom: 15mm;">
-          <div style="font-size: 14px; font-weight: bold; color: #000; border: 2px solid #1e40af; padding: 8mm; background: #f8fafc;">
-            الموضوع: ${getSubjectByRequestType(requestData.requestType)}
-          </div>
-          
-          <div style="margin-top: 8mm; font-size: 11px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5mm; text-align: center;">
-            <div style="border: 1px solid #1e40af; padding: 3mm; background: #f0f9ff;">
-              <strong>المرجع:</strong> ${requestData.sendingNumber}
-            </div>
-            <div style="border: 1px solid #1e40af; padding: 3mm; background: #f0f9ff;">
-              <strong>رقم الإرسال:</strong> ${requestData.requestNumber}
-            </div>
-            <div style="border: 1px solid #1e40af; padding: 3mm; background: #f0f9ff;">
-              <strong>رقم الطلب:</strong> ${requestData.requestType === 'طلب التدخل' ? 'طلب التدخل' : `RQ-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}-${requestData.requestType.padStart(3, '0')}`}
-            </div>
-          </div>
-        </div>
-
-        <!-- التحية -->
-        <div style="margin-bottom: 10mm; font-size: 12px;">
-          <p style="margin: 0;">سلام تام بوجود مولانا الإمام أيده الله،</p>
-        </div>
-
-        <!-- محتوى الطلب -->
-        <div style="margin-bottom: 15mm; font-size: 12px; line-height: 1.8;">
-          <p style="margin-bottom: 8mm;">
-            وبعد، نرجو منكم التكرم بإرسال الملف المدرسي للتلميذ(ة) المذكور أدناه، وذلك لاستكمال إجراءات تسجيله بمؤسستنا للموسم الدراسي الحالي.
-          </p>
-
-          ${reminderInfo.hasReminder && requestData.includeReminder ? `
-            <div style="background: #fef3c7; border: 2px solid #f59e0b; padding: 8mm; margin: 8mm 0; border-radius: 5mm;">
-              <p style="margin: 0; color: #92400e; font-weight: bold;">
-                ${reminderInfo.message}
-              </p>
-            </div>
-          ` : ''}
-        </div>
-
-        <!-- بيانات التلميذ -->
-        <div style="margin-bottom: 15mm;">
-          <h3 style="text-align: center; font-size: 14px; font-weight: bold; color: #000; margin-bottom: 8mm; border-bottom: 1px solid #374151; padding-bottom: 3mm;">
-            بيانات التلميذ(ة)
-          </h3>
-          
-          <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 8mm;">
-            <tbody>
-              ${students.map((student, index) => `
-                <tr style="border: 1px solid #374151;">
-                  <td style="border: 1px solid #374151; padding: 5mm; background: #f8fafc; font-weight: bold; width: 25%;">تاريخ التحويل</td>
-                  <td style="border: 1px solid #374151; padding: 5mm; background: #f8fafc; font-weight: bold; width: 25%;">المستوى</td>
-                  <td style="border: 1px solid #374151; padding: 5mm; background: #f8fafc; font-weight: bold; width: 25%;">النوع</td>
-                  <td style="border: 1px solid #374151; padding: 5mm; background: #f8fafc; font-weight: bold; width: 25%;">الاسم الكامل</td>
-                  <td style="border: 1px solid #374151; padding: 5mm; background: #f8fafc; font-weight: bold; width: 25%;">رقم التلميذ</td>
-                  <td style="border: 1px solid #374151; padding: 5mm; background: #f8fafc; font-weight: bold; width: 25%;">الرقم الوطني</td>
-                </tr>
-                <tr style="border: 1px solid #374151;">
-                  <td style="border: 1px solid #374151; padding: 5mm; text-align: center;">${student.transferDate ? new Date(student.transferDate).toLocaleDateString('ar-EG') : 'غير محدد'}</td>
-                  <td style="border: 1px solid #374151; padding: 5mm; text-align: center;">${student.level || 'غير محدد'}</td>
-                  <td style="border: 1px solid #374151; padding: 5mm; text-align: center;">${student.linkedGender || 'غير محدد'}</td>
-                  <td style="border: 1px solid #374151; padding: 5mm; text-align: center; font-weight: bold;">${student.firstName} ${student.lastName}</td>
-                  <td style="border: 1px solid #374151; padding: 5mm; text-align: center; font-family: monospace;">${student.studentId}</td>
-                  <td style="border: 1px solid #374151; padding: 5mm; text-align: center; font-family: monospace;">${student.linkedNationalId || student.studentId}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-
-        <!-- سجل المراسلات السابقة -->
-        ${requestData.includeCorrespondenceHistory && reminderInfo.hasReminder ? `
-          <div style="margin-bottom: 15mm;">
-            <h3 style="text-align: center; font-size: 12px; font-weight: bold; color: #dc2626; margin-bottom: 5mm;">
-              سجل المراسلات السابقة
-            </h3>
-            <div style="font-size: 10px; background: #fef2f2; border: 1px solid #fca5a5; padding: 5mm; border-radius: 3mm;">
-              <p style="margin: 0; color: #991b1b;">
-                نذكركم أنه سبق إرسال طلب مشابه لهذا التلميذ في التواريخ التالية:
-              </p>
-              <ul style="margin: 3mm 0; padding-right: 8mm; color: #7f1d1d;">
-                ${reminderInfo.previousRequests.slice(0, 3).map(req => `
-                  <li>تاريخ ${new Date(req.requestDate).toLocaleDateString('ar-EG')} - رقم الإرسال: ${req.sendingNumber || 'غير محدد'}</li>
-                `).join('')}
-              </ul>
-            </div>
-          </div>
-        ` : ''}
-
-        <!-- الخاتمة -->
-        <div style="margin-bottom: 20mm; font-size: 12px;">
-          <p style="margin-bottom: 5mm;">
-            نشكركم مسبقاً على تعاونكم، وتقبلوا فائق التقدير والاحترام.
-          </p>
-          <p style="margin: 0; font-weight: bold;">
-            والسلام عليكم ورحمة الله وبركاته.
-          </p>
-        </div>
-
-        <!-- التوقيع -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20mm; margin-top: 20mm; font-size: 11px;">
-          <div style="text-align: center;">
-            <p style="margin: 0;"><strong>تاريخ الإرسال:</strong> ${new Date(requestData.requestDate).toLocaleDateString('ar-EG')}</p>
-          </div>
-          <div style="text-align: center;">
-            <p style="margin: 0;"><strong>مدير المؤسسة</strong></p>
-            <div style="margin-top: 15mm; border-bottom: 1px solid #000; width: 60mm; margin-left: auto; margin-right: auto;"></div>
-            <p style="margin: 5mm 0 0 0; font-size: 10px; color: #6b7280;">التوقيع والختم</p>
-          </div>
-        </div>
-
-        <!-- تذييل الوثيقة -->
-        <div style="position: absolute; bottom: 8mm; left: 15mm; right: 15mm; text-align: center; font-size: 8px; color: #6b7280; border-top: 1px solid #e5e7eb; padding-top: 3mm;">
-          <p style="margin: 0;">تم إنشاء هذا الطلب بواسطة نظام إدارة التلاميذ - ${new Date().toLocaleDateString('ar-EG')}</p>
-          <p style="margin: 2mm 0 0 0;">المرجع: ${requestData.sendingNumber} | رقم الطلب: ${requestData.requestType === 'طلب التدخل' ? 'طلب التدخل' : requestData.requestType}</p>
-        </div>
       </div>
+<!-- سطر: تاريخ الطلب يمين - من مدير المؤسسة يسار -->
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+  <div style="font-weight: bold; font-size: 15px;">
+    من مدير المؤسسة
+  </div>
+  <div style="font-weight: bold; font-size: 15px;">
+    ${requestData.requestDate ? `تاريخ: ${new Date(requestData.requestDate).toLocaleDateString('fr-MA')}` : ''}
+  </div>
+</div>
+
+      
+<!-- رأس المراسلة -->
+<div style="margin: 24px 0 12px 0; display: flex; flex-direction: column; align-items: center;">
+  <div style="font-weight: bold; font-size: 15px; text-align: center; width:100%;">
+    إلى السيد(ة) مدير(ة):    ${requestData.institutionName || student.originalInstitution}       
+  </div>
+
+  <div style="font-weight: bold; font-size: 15px; text-align: center; width:100%;">
+    - تحت إشراف السيد/ة المدير/ة الإقليمي -
+  </div>
+
+    <div style="font-weight: bold; font-size: 15px; text-align: center; width:100%;">
+    ${requestData.serviceType}
+  </div>
+    <div style="font-weight: bold; font-size: 15px; text-align: center; width:100%;">
+    -المديرية الاقليمية بـ ${institutionSettings.directorate} -
+  </div>
+ 
+</div>
+
+
+<!-- إطار الموضوع والمرجعيات (يبقى بالإطار الأزرق وعناصر bold كما في الصورة) -->
+<div style="margin: 24px 0 18px 0; width: 100%; max-width: 950px; padding: 11px 28px 7px 28px;  text-align: right; font-weight: bold;">
+  <div style="font-size: 18px; color: #222; margin-bottom: 11px; text-align: right;">
+    الموضوع: طلب ملف مدرسي ${isMultiple ? 'لمجموعة من التلاميذ' : 'للتلميذ(ة)'}     رقم  : ${requestNumber}
+  </div>
+  <div style="display: flex; justify-content: flex-start; align-items: center; gap: 44px;">
+    ${requestData.includeSendingNumber && requestData.sendingNumber ? `
+      <span style="color: #1e40af;">رقم الإرسال: ${requestData.sendingNumber}</span>
+    ` : ''}
+    ${requestData.includeReference && requestData.reference ? `
+      <span style="color: #1e40af;">المرجع: ${requestData.reference}</span>
+    ` : ''}
+  </div>
+</div>
+
+<!-- النص التحية والمحتوى (الوسط مع تقليل الفراغات) -->
+<div style="margin-bottom: 12px; text-align: center; line-height: 1.8;">
+  <p style="margin-bottom: 3mm; font-weight: bold;">سلام تام بوجود مولانا الإمام أيده الله،</p>
+  <p style="margin-bottom: 2mm; font-weight: bold;">
+    وبعد، نرجو منكم التكرم بإرسال ${isMultiple ? 'الملفات المدرسية للتلاميذ' : 'الملف المدرسي للتلميذ(ة)'} المذكور${isMultiple ? 'ين' : ''} أدناه، وذلك لاستكمال إجراءات تسجيل${isMultiple ? 'هم' : 'ه'} بمؤسستنا للموسم الدراسي الحالي.
+  </p>
+</div>
+
+<!-- عنوان بيانات التلميذ(ة) بدون فراغ كبير -->
+<div style="margin: 5px 0; text-align: center; font-weight: bold;">
+  بيانات التلميذ${isMultiple ? ' المطلوب ملفاتهم' : '(ة)'}
+</div>
+<!-- جدول بيانات التلميذ(ة) -->
+<div style="margin-bottom: 5mm;">
+  <table style="width: 100%; border-collapse: collapse; font-size: 12px; border: 2px solid #374151;">
+    <thead>
+      <tr style="background: #e5e7eb;">
+        <th style="border: 1px solid #374151; padding: 4mm; text-align: center; font-weight: bold;">الرقم الوطني</th>
+        <th style="border: 1px solid #374151; padding: 4mm; text-align: center; font-weight: bold;">رقم التلميذ</th>
+        <th style="border: 1px solid #374151; padding: 4mm; text-align: center; font-weight: bold;">الاسم الكامل</th>
+        <th style="border: 1px solid #374151; padding: 4mm; text-align: center; font-weight: bold;">النوع</th>
+        <th style="border: 1px solid #374151; padding: 4mm; text-align: center; font-weight: bold;">المستوى</th>
+        <th style="border: 1px solid #374151; padding: 4mm; text-align: center; font-weight: bold;">تاريخ التحويل</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${students.map((s, index) => `
+        <tr style="${index % 2 === 0 ? 'background: white;' : 'background: #f9fafb;'}">
+          <td style="border: 1px solid #374151; padding: 3mm; text-align: center; font-family: monospace; font-weight: bold;">${s.linkedNationalId || s.studentId}</td>
+          <td style="border: 1px solid #374151; padding: 3mm; text-align: center; font-family: monospace; font-weight: bold;">${s.studentId}</td>
+          <td style="border: 1px solid #374151; padding: 3mm; text-align: center; font-weight: bold;">${s.firstName} ${s.lastName}</td>
+          <td style="border: 1px solid #374151; padding: 3mm; text-align: center; font-weight: bold;">${s.linkedGender || 'غير محدد'}</td>
+          <td style="border: 1px solid #374151; padding: 3mm; text-align: center; font-weight: bold;">${s.level}</td>
+          <td style="border: 1px solid #374151; padding: 3mm; text-align: center; font-weight: bold;">${s.transferDate ? new Date(s.transferDate).toLocaleDateString('fr-MA') : 'غير محدد'}</td>
+        </tr>
+      `).join('')}
+    </tbody>
+  </table>
+</div>
+
+<!-- سجل المراسلات السابقة (إذا كان مطلوباً) مع كل التنسيقات bold وتقليل الفراغات -->
+${includeReminderInReport && reminderAlert ? `
+  <div style="margin-bottom: 5mm;">
+    <h4 style="font-size: 12px; font-weight: bold; color: #374151; margin-bottom: 3mm; text-align: center;">
+      سجل المراسلات السابقة
+    </h4>
+    <p style="font-size: 12px; color: #000000; text-align: center; margin-bottom: 2mm; font-weight: bold;">
+      ${reminderAlert.message}
+    </p>
+    <table style="width: 100%; border-collapse: collapse; font-size: 10px; border: 1px solid #d1d5db;">
+      <thead>
+        <tr style="background: #f3f4f6;">
+          <th style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-weight: bold;">تاريخ الإرسال</th>
+          <th style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-weight: bold;">رقم الإرسال</th>
+          <th style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-weight: bold;">المرجع</th>
+          <th style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-weight: bold;">نوع الطلب</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${reminderAlert.previousRequests.map((req, index) => `
+          <tr style="${index % 2 === 0 ? 'background: white;' : 'background: #f9fafb;'}">
+            <td style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-weight: bold;">${new Date(req.requestDate).toLocaleDateString('fr-MA')}</td>
+            <td style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-family: monospace; font-weight: bold;">${req.sendingNumber || 'غير محدد'}</td>
+            <td style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-family: monospace; font-weight: bold;">${req.reference || 'غير محدد'}</td>
+            <td style="border: 1px solid #d1d5db; padding: 2mm; text-align: center; font-weight: bold;">${req.requestType}</td>
+          </tr> 
+        `).join('')}
+      </tbody>
+    </table>
+    <div style="margin-bottom:3mm; text-align: center; line-height: 1.8;">
+      <p style="margin-bottom: 2mm; font-weight: bold;">
+        نشكركم مسبقاً على تعاونكم وسرعة استجابتكم، ونؤكد لكم استعدادنا للتعاون المتبادل.
+      </p>
+      <p style="font-weight: bold;">وتقبلوا فائق الاحترام والتقدير.</p>
+    </div>
+  </div>
+` : ''}
+<!-- صناديق التوقيعات -->
+<div style="padding: 5mm; display: flex; justify-content: space-between; text-align: center;">
+  <span style="font-size: 14px; text-align: right; flex: 1; font-weight: bold;">توقيع السيد الحارس العام</span>
+  <span style="font-size: 14px; text-align: left; flex: 1; font-weight: bold;">توقيع السيد(ة) المدير(ة)</span>
+</div>
+
+ 
     `;
   };
 
-  // توليد وتحميل PDF
-  const generatePDF = async () => {
-    if (!requestData.requestNumber.trim() || !requestData.sendingNumber.trim()) {
-      showMessage('يرجى إدخال رقم الطلب ورقم الإرسال', 'error');
+  // توليد PDF للطلب
+  const generateRequestPDF = async () => {
+    if (students.length === 0) {
+      alert('لا توجد تلاميذ محددين');
       return;
     }
 
     setGenerating(true);
+    
     try {
+      // حفظ الطلب في سجل المراسلات قبل التوليد
+      const firstStudent = students[0];
+      correspondenceReminder.saveRequest({
+        studentId: firstStudent.studentId,
+        studentName: `${firstStudent.firstName} ${firstStudent.lastName}`,
+        institutionName: requestData.institutionName || firstStudent.originalInstitution,
+        requestType: requestData.requestType,
+        requestDate: requestData.requestDate,
+        sendingNumber: requestData.sendingNumber,
+        reference: requestData.reference,
+        subject: `طلب ملف مدرسي ${requestData.requestType === 'جماعي' ? 'جماعي' : 'فردي'}`,
+        content: `طلب ملف مدرسي للتلميذ ${firstStudent.firstName} ${firstStudent.lastName}`
+      });
+      
       const pdf = new jsPDF('p', 'mm', 'a4');
       let isFirstPage = true;
 
-      for (const student of students) {
-        if (!isFirstPage) {
-          pdf.addPage();
-        }
-
-        const printElement = document.createElement('div');
-        printElement.innerHTML = generateRequestHTML(student);
-        printElement.style.position = 'absolute';
-        printElement.style.left = '-9999px';
-        printElement.style.top = '0';
-        printElement.style.width = '210mm';
-        printElement.style.background = 'white';
-        printElement.style.fontFamily = 'Cairo, Arial, sans-serif';
-        printElement.style.direction = 'rtl';
-        document.body.appendChild(printElement);
-
-        try {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+      if (requestData.requestType === 'جماعي' && students.length > 1) {
+        // طلب جماعي واحد لجميع التلاميذ
+        const requestNumber = generateRequestNumber();
+        const htmlContent = generateRequestHTML(students[0], requestNumber, true);
+        
+        await addPageToPDF(pdf, htmlContent, isFirstPage);
+        
+      } else {
+        // طلبات فردية لكل تلميذ
+        for (let i = 0; i < students.length; i++) {
+          const student = students[i];
+          const requestNumber = generateRequestNumber(i);
+          const htmlContent = generateRequestHTML(student, requestNumber, false);
           
-          const canvas = await html2canvas(printElement, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: '#ffffff',
-            width: 794,
-            height: printElement.scrollHeight,
-            logging: false
-          });
-
-          const imgData = canvas.toDataURL('image/png');
-          const pdfWidth = pdf.internal.pageSize.getWidth();
-          const pdfHeight = pdf.internal.pageSize.getHeight();
-          const imgWidth = pdfWidth;
-          const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-
-          let yOffset = 0;
-          while (yOffset < imgHeight) {
-            if (yOffset > 0) {
-              pdf.addPage();
-            }
-            
-            pdf.addImage(imgData, 'PNG', 0, -yOffset, imgWidth, imgHeight);
-            yOffset += pdfHeight;
+          if (!isFirstPage) {
+            pdf.addPage();
           }
-
-        } finally {
-          document.body.removeChild(printElement);
+          
+          await addPageToPDF(pdf, htmlContent, isFirstPage);
+          isFirstPage = false;
         }
-
-        isFirstPage = false;
-
-        // حفظ الطلب في سجل المراسلات
-        correspondenceReminder.saveRequest({
-          studentId: student.studentId,
-          studentName: `${student.firstName} ${student.lastName}`,
-          institutionName: student.originalInstitution,
-          requestType: `طلب ملف مدرسي - ${requestData.requestType}`,
-          requestDate: requestData.requestDate,
-          sendingNumber: requestData.sendingNumber,
-          reference: requestData.requestNumber,
-          subject: getSubjectByRequestType(requestData.requestType),
-          content: `طلب ملف مدرسي للتلميذ ${student.firstName} ${student.lastName} - ${student.studentId}`
-        });
       }
 
-      const fileName = students.length === 1 
-        ? `طلب_ملف_مدرسي_${students[0].firstName}_${students[0].lastName}_${requestData.requestType}.pdf`
-        : `طلبات_ملفات_مدرسية_${students.length}_تلاميذ_${requestData.requestType}.pdf`;
+      // حفظ الملف
+      const fileName = requestData.requestType === 'جماعي' 
+        ? `طلب_ملفات_جماعي_${(requestData.institutionName || 'مؤسسة').replace(/\s+/g, '_')}_${requestData.requestDate}.pdf`
+        : `طلبات_ملفات_فردية_${requestData.requestDate}.pdf`;
       
       pdf.save(fileName);
       
-      showMessage(`تم توليد ${students.length} طلب بنجاح!`, 'success');
+      // تأكيد الإرسال
+      onRequestSent();
       
-      // تأخير قبل استدعاء onRequestSent
-      setTimeout(() => {
-        onRequestSent();
-      }, 1000);
-
+      alert( `تم توليد ${requestData.requestType === 'جماعي' ? 'طلب جماعي واحد' : `${students.length} طلب فردي`} بنجاح!`);
+      
     } catch (error) {
       console.error('خطأ في توليد PDF:', error);
-      showMessage('خطأ في توليد ملف PDF', 'error');
+      alert('خطأ في توليد ملف PDF');
     } finally {
       setGenerating(false);
     }
   };
 
+  // إضافة صفحة إلى PDF
+  const addPageToPDF = async (pdf: jsPDF, htmlContent: string, isFirstPage: boolean) => {
+    const printElement = document.createElement('div');
+    printElement.innerHTML = htmlContent;
+    printElement.style.position = 'absolute';
+    printElement.style.left = '-9999px';
+    printElement.style.top = '0';
+    printElement.style.width = '210mm';
+    printElement.style.background = 'white';
+    document.body.appendChild(printElement);
+
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const canvas = await html2canvas(printElement, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      
+    } finally {
+      document.body.removeChild(printElement);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setRequestData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* رأس النموذج */}
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-2xl font-bold text-gray-900">
-            توليد طلب ملف مدرسي ({students.length} تلميذ)
+            طلب ملف مدرسي ({students.length} تلميذ)
           </h2>
           <button
             onClick={onCancel}
@@ -513,80 +535,129 @@ ${student.originalInstitution || 'ثانوية المسكيني'}
           </button>
         </div>
 
-        {/* عرض الرسائل */}
-        {message && (
-          <div className={`mx-6 mt-4 p-4 rounded-lg flex items-center gap-2 ${
-            messageType === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'
-          }`}>
-            {messageType === 'success' ? (
-              <CheckCircle className="w-5 h-5" />
-            ) : (
-              <AlertCircle className="w-5 h-5" />
-            )}
-            {message}
-          </div>
-        )}
-
+        {/* محتوى النموذج */}
         <div className="p-6 space-y-6">
-          {/* إعدادات الطلب */}
+          {/* معلومات التلاميذ */}
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
             <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              التلاميذ المحددين ({students.length})
+            </h3>
+            <div className="max-h-32 overflow-y-auto space-y-2">
+              {students.map((student, index) => (
+                <div key={student.id} className="bg-white p-3 rounded border flex justify-between items-center">
+                  <div>
+                    <div className="text-sm font-medium text-gray-900">{student.firstName} {student.lastName}</div>
+                    <div className="text-sm text-gray-600">{student.studentId} - {student.level}</div>
+                    {student.isLinked && (
+                      <div className="text-xs text-green-600">مرتبط: {student.linkedGender} - {student.linkedSection}</div>
+                    )}
+                  </div>
+                  <div className="text-sm text-gray-500">{student.originalInstitution}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* إعدادات الطلب */}
+          <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+            <h3 className="text-lg font-semibold text-green-900 mb-4 flex items-center gap-2">
               <FileText className="w-5 h-5" />
               إعدادات الطلب
             </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* نوع الطلب */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  نوع الطلب
+                </label>
+                <select
+                  name="requestType"
+                  value={requestData.requestType}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                >
+                  <option value="فردي">طلبات فردية لكل تلميذ</option>
+                  <option value="جماعي">طلب جماعي واحد</option>
+                </select>
+              </div>
+
               {/* تاريخ الطلب */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  تاريخ الطلب *
+                  تاريخ الطلب
                 </label>
                 <input
                   type="date"
+                  name="requestDate"
                   value={requestData.requestDate}
-                  onChange={(e) => setRequestData(prev => ({ ...prev, requestDate: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
               </div>
 
-              {/* رقم الطلب */}
+              {/* نوع المصلحة */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  رقم الطلب *
+                  نوع المصلحة *
                 </label>
-                <select
-                  value={requestData.requestType}
-                  onChange={(e) => setRequestData(prev => ({ ...prev, requestType: e.target.value as any }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="1">طلب رقم 1</option>
-                  <option value="2">طلب رقم 2</option>
-                  <option value="3">طلب رقم 3</option>
-                  <option value="4">طلب رقم 4</option>
-                  <option value="طلب التدخل">طلب التدخل</option>
-                </select>
+                <div className="flex gap-2">
+                  <select
+                    name="serviceType"
+                    value={requestData.serviceType}
+                    onChange={handleChange}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  >
+                    <option value="">اختر المصلحة</option>
+                    {services.map(service => (
+                      <option key={service.id} value={service.name} data-service-id={service.id}>
+                        {service.name} {!ServiceManager.canDeleteService(service.id) ? '(افتراضية)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddServiceModal(true)}
+                    className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                    title="إضافة مصلحة جديدة"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const selectedService = services.find(s => s.name === requestData.serviceType);
+                      if (selectedService && ServiceManager.canDeleteService(selectedService.id)) {
+                        setServiceToDelete(selectedService.id);
+                        setShowDeleteServiceModal(true);
+                      } else {
+                        alert('لا يمكن حذف المصالح الافتراضية');
+                      }
+                    }}
+                    disabled={!requestData.serviceType || !services.find(s => s.name === requestData.serviceType && ServiceManager.canDeleteService(s.id))}
+                    className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                    title="حذف المصلحة المحددة"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
-              {/* نوع الإرسال */}
+              {/* اسم المؤسسة */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  نوع الإرسال *
+                  المؤسسة المرسل إليها
                 </label>
-                <select
-                  value={requestData.locationType}
-                  onChange={(e) => setRequestData(prev => ({ ...prev, locationType: e.target.value as any }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="داخل الإقليم">داخل الإقليم</option>
-                  <option value="خارج الإقليم">خارج الإقليم</option>
-                </select>
-                <p className="text-xs text-gray-500 mt-1">
-                  {requestData.locationType === 'داخل الإقليم' 
-                    ? 'سيتم الإرسال لمؤسسة داخل نفس الإقليم' 
-                    : 'سيتم الإرسال لمؤسسة خارج الإقليم'}
-                </p>
+                <input
+                  type="text"
+                  name="institutionName"
+                  value={requestData.institutionName}
+                  onChange={handleChange}
+                  placeholder="سيتم ملؤه تلقائياً"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
               </div>
-
+              
               {/* رقم الإرسال */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -594,152 +665,170 @@ ${student.originalInstitution || 'ثانوية المسكيني'}
                 </label>
                 <input
                   type="text"
-                  value={requestData.requestNumber}
-                  onChange={(e) => setRequestData(prev => ({ ...prev, requestNumber: e.target.value }))}
+                  name="sendingNumber"
+                  value={requestData.sendingNumber}
+                  onChange={handleChange}
                   placeholder="مثال: 2025/09/24-221"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  أدخل رقم الإرسال يدوياً (مطلوب)
+                </p>
               </div>
-
+              
+              {/* رقم الطلب */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  رقم الطلب *
+                </label>
+                <select
+                  name="requestNumber"
+                  value={requestData.requestNumber}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                >
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="طلب التدخل">طلب التدخل</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  اختر رقم الطلب أو "طلب التدخل"
+                </p>
+              </div>
+              
               {/* المرجع */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  المرجع *
+                  المرجع
                 </label>
                 <input
                   type="text"
-                  value={requestData.sendingNumber}
-                  onChange={(e) => setRequestData(prev => ({ ...prev, sendingNumber: e.target.value }))}
-                  placeholder="مثال: REF-202509-884"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  name="reference"
+                  value={requestData.reference}
+                  onChange={handleChange}
+                  placeholder="مثال: REF-202501-001"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
               </div>
+              
+              {/* تاريخ آخر مراسلة 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  تاريخ آخر مراسلة (اختياري)
+                </label>
+                <input
+                  type="date"
+                  name="lastCorrespondenceDate"
+                  value={requestData.lastCorrespondenceDate}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+              </div>*/}
             </div>
-          </div>
-
-          {/* إدارة المصالح */}
-          <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-green-900 flex items-center gap-2">
-                <Building className="w-5 h-5" />
-                إدارة المصالح
-              </h3>
-              <button
-                onClick={() => setShowAddService(true)}
-                className="flex items-center gap-2 px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 text-sm"
-              >
-                <Plus className="w-4 h-4" />
-                إضافة مصلحة
-              </button>
-            </div>
-
-            {/* قائمة المصالح */}
-            <div className="space-y-2 max-h-40 overflow-y-auto">
-              {services.map(service => {
-                const isDefault = DEFAULT_SERVICES.some(ds => ds.id === service.id);
-                const canDelete = ServiceManager.canDeleteService(service.id);
+             
+            {/* خيارات التقرير المطبوع */}
+            <div className="mt-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <h4 className="font-semibold text-blue-900 mb-3">خيارات التقرير المطبوع</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="includeSendingNumber"
+                    checked={requestData.includeSendingNumber}
+                    onChange={(e) => setRequestData(prev => ({ ...prev, includeSendingNumber: e.target.checked }))}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                  />
+                  <span className="mr-2 text-sm font-medium text-gray-700">تضمين رقم الإرسال</span>
+                </label>
                 
-                return (
-                  <div key={service.id} className="flex items-center justify-between p-3 bg-white rounded border">
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="radio"
-                        name="selectedService"
-                        value={service.id}
-                        checked={requestData.selectedService === service.id}
-                        onChange={(e) => setRequestData(prev => ({ ...prev, selectedService: e.target.value }))}
-                        className="text-green-600"
-                      />
-                      <div>
-                        <div className="font-medium text-gray-900">{service.name}</div>
-                        <div className="text-xs text-gray-500">
-                          {isDefault ? '(افتراضية)' : '(مخصصة)'} - {service.description}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {canDelete && (
-                      <button
-                        onClick={() => handleDeleteService(service.id)}
-                        className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors duration-200"
-                        title="حذف المصلحة"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="includeReference"
+                    checked={requestData.includeReference}
+                    onChange={(e) => setRequestData(prev => ({ ...prev, includeReference: e.target.checked }))}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                  />
+                  <span className="mr-2 text-sm font-medium text-gray-700">تضمين المرجع</span>
+                </label>
+                
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="includeLastCorrespondenceDate"
+                    checked={requestData.includeLastCorrespondenceDate}
+                    onChange={(e) => setRequestData(prev => ({ ...prev, includeLastCorrespondenceDate: e.target.checked }))}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                  />
+                  <span className="mr-2 text-sm font-medium text-gray-700">تضمين تاريخ آخر مراسلة</span>
+                </label>
+                
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={includeReminderInReport}
+                    onChange={(e) => setIncludeReminderInReport(e.target.checked)}
+                    className="rounded border-gray-300 text-red-600 shadow-sm focus:border-red-300 focus:ring focus:ring-red-200 focus:ring-opacity-50"
+                  />
+                  <span className="mr-2 text-sm font-medium text-gray-700">تضمين سجل المراسلات السابقة</span>
+                </label>
+              </div>
+            </div>
+
+            {/* ملاحظات إضافية */}
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                ملاحظات إضافية
+              </label>
+              <textarea
+                name="notes"
+                value={requestData.notes}
+                onChange={handleChange}
+                rows={3}
+                placeholder="أي ملاحظات إضافية للطلب..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
             </div>
           </div>
 
-          {/* خيارات التقرير المطبوع */}
-          <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-            <h3 className="text-lg font-semibold text-purple-900 mb-4">خيارات التقرير المطبوع</h3>
-            
-            <div className="space-y-3">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={requestData.includeReminder}
-                  onChange={(e) => setRequestData(prev => ({ ...prev, includeReminder: e.target.checked }))}
-                  className="rounded border-gray-300 text-purple-600"
-                />
-                <span className="mr-2 text-sm font-medium text-gray-700">تضمين تذكير بالطلبات السابقة</span>
-              </label>
-
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={requestData.includeStudentDetails}
-                  onChange={(e) => setRequestData(prev => ({ ...prev, includeStudentDetails: e.target.checked }))}
-                  className="rounded border-gray-300 text-purple-600"
-                />
-                <span className="mr-2 text-sm font-medium text-gray-700">تضمين تفاصيل التلميذ</span>
-              </label>
-
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={requestData.includeCorrespondenceHistory}
-                  onChange={(e) => setRequestData(prev => ({ ...prev, includeCorrespondenceHistory: e.target.checked }))}
-                  className="rounded border-gray-300 text-purple-600"
-                />
-                <span className="mr-2 text-sm font-medium text-gray-700">تضمين سجل المراسلات السابقة</span>
-              </label>
-            </div>
-          </div>
-
-          {/* معاينة التلاميذ */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">التلاميذ المحددين للطلب</h3>
-            <div className="space-y-2 max-h-40 overflow-y-auto">
-              {students.map((student, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-white rounded border">
-                  <div>
-                    <div className="font-medium text-gray-900">{student.firstName} {student.lastName}</div>
-                    <div className="text-sm text-gray-600">
-                      {student.studentId} | {student.level} | {student.originalInstitution}
-                    </div>
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {student.requestCount > 0 && (
-                      <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">
-                        {student.requestCount} طلب سابق
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
+          {/* معاينة الطلب */}
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">معاينة الطلب</h3>
+            <div className="text-sm text-gray-700 space-y-2">
+              <p><strong>نوع الطلب:</strong> {requestData.requestType}</p>
+              <p><strong>عدد التلاميذ:</strong> {students.length}</p>
+              <p><strong>المؤسسة المرسل إليها:</strong> {requestData.institutionName}</p>
+              <p><strong>نوع المصلحة:</strong> {requestData.serviceType || 'مصلحة الشؤون التربوية'}</p>
+              <p><strong>رقم الطلب:</strong> {generateRequestNumber()}</p>
+              {requestData.includeSendingNumber && requestData.sendingNumber && (
+                <p><strong>رقم الإرسال:</strong> {requestData.sendingNumber}</p>
+              )}
+              {requestData.includeReference && requestData.reference && (
+                <p><strong>المرجع:</strong> {requestData.reference}</p>
+              )}
+              {requestData.includeLastCorrespondenceDate && requestData.lastCorrespondenceDate && (
+                <p><strong>تاريخ آخر مراسلة:</strong> {new Date(requestData.lastCorrespondenceDate).toLocaleDateString('fr-MA')}</p>
+              )}
+              {requestData.requestType === 'فردي' && students.length > 1 && (
+                <p className="text-blue-600"><strong>ملاحظة:</strong> سيتم توليد {students.length} طلب منفصل</p>
+              )}
+              <div className="mt-3 p-2 bg-blue-50 rounded border border-blue-200">
+                <p className="text-xs text-blue-700">
+                  <strong>الربط التلقائي:</strong> سيتم جلب الجنس والقسم من قاعدة البيانات الرئيسية تلقائياً للتلاميذ المرتبطين
+                </p>
+              </div>
             </div>
           </div>
 
           {/* أزرار التحكم */}
           <div className="flex gap-4 pt-4">
             <button
-              onClick={generatePDF}
-              disabled={generating || !requestData.requestNumber.trim() || !requestData.sendingNumber.trim()}
-              className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center gap-2"
+              onClick={generateRequestPDF}
+              disabled={generating || students.length === 0 || !requestData.sendingNumber.trim()}
+              className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center gap-2"
             >
               {generating ? (
                 <>
@@ -748,30 +837,132 @@ ${student.originalInstitution || 'ثانوية المسكيني'}
                 </>
               ) : (
                 <>
-                  <Download className="w-5 h-5" />
-                  توليد وتحميل الطلب
+                  <Send className="w-5 h-5" />
+                  توليد وإرسال الطلب
                 </>
               )}
             </button>
-            
             <button
               onClick={onCancel}
-              className="flex-1 px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors duration-200"
+              className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors duration-200"
             >
               إلغاء
             </button>
           </div>
         </div>
 
-        {/* نموذج إضافة مصلحة جديدة */}
-        {showAddService && (
+        {/* مودال التذكير بالمراسلات السابقة */}
+        {showReminderModal && reminderAlert && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-60">
+            <div className="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-2xl">
+              <div className="bg-gradient-to-r from-red-500 to-red-600 text-white p-6 text-center">
+                <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AlertCircle className="w-8 h-8" />
+                </div>
+                <h2 className="text-xl font-bold mb-2">🚨 تنبيه: مراسلات سابقة</h2>
+                <p className="text-red-100">تم العثور على طلبات سابقة لنفس التلميذ</p>
+              </div>
+
+              <div className="p-6">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <AlertCircle className="w-5 h-5 text-red-600" />
+                    <span className="font-semibold text-red-900">رسالة التذكير</span>
+                  </div>
+                  <p className="text-red-800 font-medium">{reminderAlert.message}</p>
+                </div>
+
+                <div className="bg-white border border-gray-200 rounded-lg overflow-hidden mb-6">
+                  <div className="bg-gray-50 p-3 border-b">
+                    <h3 className="font-semibold text-gray-900">تفاصيل المراسلات السابقة</h3>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-2 text-center font-bold text-gray-700">تاريخ الإرسال</th>
+                          <th className="px-4 py-2 text-center font-bold text-gray-700">رقم الإرسال</th>
+                          <th className="px-4 py-2 text-center font-bold text-gray-700">المرجع</th>
+                          <th className="px-4 py-2 text-center font-bold text-gray-700">نوع الطلب</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reminderAlert.previousRequests.map((req, index) => (
+                          <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}>
+                            <td className="px-4 py-2 text-center font-bold text-red-600">
+                              {new Date(req.requestDate).toLocaleDateString('fr-MA')}
+                            </td>
+                            <td className="px-4 py-2 text-center font-mono text-gray-700">
+                              {req.sendingNumber || 'غير محدد'}
+                            </td>
+                            <td className="px-4 py-2 text-center font-mono text-gray-700">
+                              {req.reference || 'غير محدد'}
+                            </td>
+                            <td className="px-4 py-2 text-center text-gray-700">{req.requestType}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-6">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CheckCircle className="w-5 h-5 text-blue-600" />
+                    <span className="font-medium text-blue-900">خيارات المتابعة</span>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={includeReminderInReport}
+                        onChange={(e) => setIncludeReminderInReport(e.target.checked)}
+                        className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                      />
+                      <span className="mr-2 text-sm font-medium text-blue-800">
+                        تضمين سجل المراسلات السابقة في التقرير المطبوع
+                      </span>
+                    </label>
+                    <p className="text-xs text-blue-700 mr-6">
+                      سيتم إضافة جدول بجميع المراسلات السابقة في التقرير النهائي
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => {
+                      setShowReminderModal(false);
+                      // المتابعة مع توليد التقرير
+                    }}
+                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
+                  >
+                    متابعة رغم التذكير
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowReminderModal(false);
+                      onCancel();
+                    }}
+                    className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors duration-200"
+                  >
+                    إلغاء والمراجعة
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* مودال إضافة مصلحة جديدة */}
+        {showAddServiceModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-60">
             <div className="bg-white rounded-xl max-w-md w-full">
               <div className="flex items-center justify-between p-6 border-b">
-                <h3 className="text-xl font-bold text-gray-900">إضافة مصلحة جديدة</h3>
+                <h2 className="text-xl font-bold text-gray-900">إضافة مصلحة جديدة</h2>
                 <button
                   onClick={() => {
-                    setShowAddService(false);
+                    setShowAddServiceModal(false);
                     setNewServiceName('');
                     setNewServiceDescription('');
                   }}
@@ -790,37 +981,98 @@ ${student.originalInstitution || 'ثانوية المسكيني'}
                     type="text"
                     value={newServiceName}
                     onChange={(e) => setNewServiceName(e.target.value)}
-                    placeholder="مثال: مصلحة الامتحانات والتقويم"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="مثال: مصلحة التأطير والتوجيه"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    وصف المصلحة
+                    وصف المصلحة (اختياري)
                   </label>
                   <textarea
                     value={newServiceDescription}
                     onChange={(e) => setNewServiceDescription(e.target.value)}
-                    placeholder="وصف مختصر لمهام المصلحة..."
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="وصف مختصر للمصلحة..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
-                <div className="flex gap-4">
+                <div className="flex gap-4 pt-4">
                   <button
                     onClick={handleAddService}
                     disabled={!newServiceName.trim()}
-                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                   >
                     إضافة المصلحة
                   </button>
                   <button
                     onClick={() => {
-                      setShowAddService(false);
+                      setShowAddServiceModal(false);
                       setNewServiceName('');
                       setNewServiceDescription('');
+                    }}
+                    className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors duration-200"
+                  >
+                    إلغاء
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* مودال حذف المصلحة */}
+        {showDeleteServiceModal && serviceToDelete && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-60">
+            <div className="bg-white rounded-xl max-w-md w-full">
+              <div className="flex items-center justify-between p-6 border-b">
+                <h2 className="text-xl font-bold text-gray-900">تأكيد حذف المصلحة</h2>
+                <button
+                  onClick={() => {
+                    setShowDeleteServiceModal(false);
+                    setServiceToDelete(null);
+                  }}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                    <AlertCircle className="w-6 h-6 text-red-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-red-900">حذف المصلحة</h3>
+                    <p className="text-red-700 text-sm">
+                      هل أنت متأكد من حذف هذه المصلحة؟
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-red-50 p-4 rounded-lg mb-6 border border-red-200">
+                  <p className="text-red-800 font-medium">
+                    المصلحة: {services.find(s => s.id === serviceToDelete)?.name}
+                  </p>
+                  <p className="text-red-700 text-sm mt-1">
+                    سيتم حذف هذه المصلحة نهائياً من القائمة
+                  </p>
+                </div>
+
+                <div className="flex gap-4">
+                  <button
+                    onClick={handleDeleteService}
+                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200"
+                  >
+                    تأكيد الحذف
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowDeleteServiceModal(false);
+                      setServiceToDelete(null);
                     }}
                     className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors duration-200"
                   >
