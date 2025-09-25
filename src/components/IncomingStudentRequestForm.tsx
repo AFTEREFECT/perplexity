@@ -44,6 +44,7 @@ const IncomingStudentRequestForm: React.FC<IncomingStudentRequestFormProps> = ({
     lastCorrespondenceDate: '',
     notes: '',
     requestType: 'فردي' as 'فردي' | 'جماعي',
+    regionalScope: 'داخل الإقليم' as 'داخل الإقليم' | 'خارج الإقليم',
     // خيارات التقرير المطبوع
     includeSendingNumber: true,
     includeReference: true,
@@ -259,6 +260,53 @@ const generateRequestHTML = (
 ) => {
   const logoHTML = logoManager.getLogoHTML();
 console.log('settings', institutionSettings)
+
+  // تحديد تنسيق المرسل إليه حسب النطاق الإقليمي
+  const generateRecipientSection = () => {
+    if (requestData.regionalScope === 'خارج الإقليم') {
+      // الشكل 1: خارج الإقليم - تنسيق مفصل مع الأكاديمية
+      return `
+        <div style="font-weight: bold; font-size: 14px; text-align: center; width:100%;">
+          إلى السيد مدير ثانوية ............... (المؤسسة الأصلية للتلميذ الوافد)
+        </div>
+        <div style="font-weight: bold; font-size: 14px; text-align: center; width:100%;">
+          - تحت إشراف السيدة المديرة الإقليمي -
+        </div>
+        <div style="font-weight: bold; font-size: 14px; text-align: center; width:100%;">
+          - مصلحة التأطير و تنشيط المؤسسات التعليمية، و التوجيه
+        </div>
+        <div style="font-weight: bold; font-size: 14px; text-align: center; width:100%;">
+          - المديرية الإقليمية بـ ................(المديرية الاستقبال)
+        </div>
+        <div style="font-weight: bold; font-size: 14px; text-align: center; width:100%;">
+          - تحت إشراف السيد(ة) المدير(ة) الإقليمي
+        </div>
+        <div style="font-weight: bold; font-size: 14px; text-align: center; width:100%;">
+          - المديرية الإقليمية بـ ................(المديرية الأصلية للتلميذ)
+        </div>
+        <div style="font-weight: bold; font-size: 14px; text-align: center; width:100%;">
+          - بأكاديمية: ................(الأكاديمية الأصلية)
+        </div>
+      `;
+    } else {
+      // الشكل 2: داخل الإقليم - التنسيق الحالي
+      return `
+        <div style="font-weight: bold; font-size: 14px; text-align: center; width:100%;">
+          إلى السيد(ة) مدير(ة):    ${requestData.institutionName || student.originalInstitution}       
+        </div>
+        <div style="font-weight: bold; font-size: 14px; text-align: center; width:100%;">
+          - تحت إشراف السيد/ة المدير/ة الإقليمي -
+        </div>
+        <div style="font-weight: bold; font-size: 14px; text-align: center; width:100%;">
+          ${requestData.serviceType}
+        </div>
+        <div style="font-weight: bold; font-size: 14px; text-align: center; width:100%;">
+          -المديرية الاقليمية بـ ${institutionSettings.directorate} -
+        </div>
+      `;
+    }
+  };
+
   return `
     <div style="font-family: 'Cairo', Arial, sans-serif; direction: rtl; padding: 4mm; line-height: 1.7; background: white; color: #000;">
       <!-- رأس الوثيقة -->
@@ -289,21 +337,7 @@ console.log('settings', institutionSettings)
       
 <!-- رأس المراسلة -->
 <div style="margin: 24px 0 12px 0; display: flex; flex-direction: column; align-items: center;">
-  <div style="font-weight: bold; font-size: 14px; text-align: center; width:100%;">
-    إلى السيد(ة) مدير(ة):    ${requestData.institutionName || student.originalInstitution}       
-  </div>
-
-  <div style="font-weight: bold; font-size: 14px; text-align: center; width:100%;">
-    - تحت إشراف السيد/ة المدير/ة الإقليمي -
-  </div>
-
-    <div style="font-weight: bold; font-size: 14px; text-align: center; width:100%;">
-    ${requestData.serviceType}
-  </div>
-    <div style="font-weight: bold; font-size: 14px; text-align: center; width:100%;">
-    -المديرية الاقليمية بـ ${institutionSettings.directorate} -
-  </div>
- 
+  ${generateRecipientSection()}
 </div>
 
 <!-- إطار الموضوع والمرجعيات (يبقى بالإطار الأزرق وعناصر bold كما في الصورة) -->
@@ -580,6 +614,27 @@ ${includeReminderInReport && reminderAlert ? `
                 </select>
               </div>
 
+              {/* نطاق الإرسال */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  نطاق الإرسال *
+                </label>
+                <select
+                  name="regionalScope"
+                  value={requestData.regionalScope}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                >
+                  <option value="داخل الإقليم">داخل الإقليم</option>
+                  <option value="خارج الإقليم">خارج الإقليم</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  {requestData.regionalScope === 'خارج الإقليم' 
+                    ? 'سيتم استخدام التنسيق المفصل مع الأكاديمية' 
+                    : 'سيتم استخدام التنسيق العادي داخل الإقليم'
+                  }
+                </p>
+              </div>
               {/* تاريخ الطلب */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -813,6 +868,15 @@ ${includeReminderInReport && reminderAlert ? `
             <h3 className="text-lg font-semibold text-gray-900 mb-4">معاينة الطلب</h3>
             <div className="text-sm text-gray-700 space-y-2">
               <p><strong>نوع الطلب:</strong> {requestData.requestType}</p>
+              <p><strong>نطاق الإرسال:</strong> 
+                <span className={`px-2 py-1 text-xs font-semibold rounded-full ml-2 ${
+                  requestData.regionalScope === 'خارج الإقليم' 
+                    ? 'bg-red-100 text-red-800' 
+                    : 'bg-green-100 text-green-800'
+                }`}>
+                  {requestData.regionalScope}
+                </span>
+              </p>
               <p><strong>عدد التلاميذ:</strong> {students.length}</p>
               <p><strong>المؤسسة المرسل إليها:</strong> {requestData.institutionName}</p>
               <p><strong>نوع المصلحة:</strong> {requestData.serviceType || 'مصلحة الشؤون التربوية'}</p>
@@ -828,6 +892,13 @@ ${includeReminderInReport && reminderAlert ? `
               )}
               {requestData.requestType === 'فردي' && students.length > 1 && (
                 <p className="text-blue-600"><strong>ملاحظة:</strong> سيتم توليد {students.length} طلب منفصل</p>
+              )}
+              {requestData.regionalScope === 'خارج الإقليم' && (
+                <div className="mt-3 p-3 bg-red-50 rounded border border-red-200">
+                  <p className="text-xs text-red-700 font-medium">
+                    <strong>تنبيه:</strong> سيتم استخدام التنسيق المفصل للإرسال خارج الإقليم مع ذكر الأكاديمية والمديرية الأصلية
+                  </p>
+                </div>
               )}
               <div className="mt-3 p-2 bg-blue-50 rounded border border-blue-200">
                 <p className="text-xs text-blue-700">
