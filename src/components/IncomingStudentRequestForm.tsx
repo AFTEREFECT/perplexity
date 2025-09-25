@@ -203,6 +203,18 @@ const IncomingStudentRequestForm: React.FC<IncomingStudentRequestFormProps> = ({
     }
   };
 
+  // تحديد موضوع الطلب حسب رقم الطلب
+  const getSubjectByRequestType = (type: string) => {
+    switch (type) {
+      case '1': return 'طلب ملف مدرسي للتلميذ(ة) رقم : 01';
+      case '2': return 'طلب ملف مدرسي للتلميذ(ة) رقم : 02';
+      case '3': return 'طلب ملف مدرسي للتلميذ(ة) رقم : 03';
+      case '4': return 'طلب ملف مدرسي للتلميذ(ة) رقم : 04';
+      case 'طلب التدخل': return 'طلب التدخل';
+      default: return 'طلب ملف مدرسي للتلميذ(ة)';
+    }
+  };
+
   // توليد HTML للطلب حسب نوع الإرسال
   const generateRequestHTML = (student: IncomingStudent) => {
     const selectedService = services.find(s => s.id === requestData.selectedService);
@@ -219,18 +231,6 @@ const IncomingStudentRequestForm: React.FC<IncomingStudentRequestFormProps> = ({
          ثانوية المسكيني
          تحت إشراف السيد(ة) المدير(ة) الإقليمي -
          - المديرية الإقليمية -`;
-
-    // تحديد موضوع الطلب حسب رقم الطلب
-    const getSubjectByRequestType = (type: string) => {
-      switch (type) {
-        case '1': return 'طلب ملف مدرسي للتلميذ(ة) رقم : 01';
-        case '2': return 'طلب ملف مدرسي للتلميذ(ة) رقم : 02';
-        case '3': return 'طلب ملف مدرسي للتلميذ(ة) رقم : 03';
-        case '4': return 'طلب ملف مدرسي للتلميذ(ة) رقم : 04';
-        case 'طلب التدخل': return 'طلب التدخل';
-        default: return 'طلب ملف مدرسي للتلميذ(ة)';
-      }
-    };
 
     // فحص الطلبات السابقة للتذكير
     const reminderInfo = correspondenceReminder.checkForSimilarRequests(
